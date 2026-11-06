@@ -692,3 +692,59 @@ export function getFriendProfile(viewerId, friendId, recentLimit = 5) {
     invitableLists,
   }
 }
+// Detail pages and voting use the same saved row as the city ranking.
+function getSavedPlaceContext(placeId) {
+  const place = getPlaceById(placeId)
+  if (!place) return null
+  const list = getListByCityId(place.cityId)
+  const saved = list
+    ? savedPlaces.find((item) => item.placeId === placeId && item.listId === list.id)
+    : null
+  return { place, list, saved }
+}
+
+export function getPlaceVotingData(placeId) {
+  const context = getSavedPlaceContext(placeId)
+  if (!context) return null
+  const { place, list, saved } = context
+  const canVote = Boolean(saved && list.memberIds.includes(currentUserId))
+  const ranked = saved
+    ? getRankedCityPlaces(place.cityId).find((item) => item.savedPlaceId === saved.id)
+    : null
+  const existing = canVote
+    ? votes.find((vote) => vote.savedPlaceId === saved.id && vote.userId === currentUserId)
+    : null
+  return {
+    savedPlaceId: saved?.id ?? null,
+    tally: ranked?.tally ?? { 'must-go': 0, down: 0, pass: 0 },
+    value: ['must-go', 'down', 'pass'].includes(existing?.value) ? existing.value : null,
+    canVote,
+    reason: !saved ? 'Save this place to a list before voting.'
+      : !canVote ? 'Join this city list to vote.' : '',
+  }
+}
+
+export function setPlaceVote(placeId, value) {
+  if (!['must-go', 'down', 'pass'].includes(value)) {
+    return { ok: false, error: 'Choose one of the three vote options.' }
+  }
+  const voting = getPlaceVotingData(placeId)
+  if (!voting) return { ok: false, error: 'Place not found.' }
+  if (!voting.canVote) return { ok: false, error: voting.reason }
+
+  const matches = (vote) => vote.savedPlaceId === voting.savedPlaceId && vote.userId === currentUserId
+  const existing = votes.find(matches)
+  if (existing) {
+    existing.value = value
+    // Keep one record for this user, even if old demo data contains duplicates.
+    for (let index = votes.length - 1; index >= 0; index -= 1) {
+      if (votes[index] !== existing && matches(votes[index])) votes.splice(index, 1)
+    }
+  } else {
+    let suffix = 1
+    while (votes.some((vote) => vote.id === `vote-${suffix}`)) suffix += 1
+    votes.push({ id: `vote-${suffix}`, savedPlaceId: voting.savedPlaceId, userId: currentUserId, value })
+  }
+  // Recalculate through the same function used by the city list.
+  return { ok: true, voting: getPlaceVotingData(placeId) }
+}

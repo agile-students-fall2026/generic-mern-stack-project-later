@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router'
-import { getPlaceDetail } from '../data/mockDataLayer'
+import { getPlaceDetail, getPlaceVotingData, setPlaceVote } from '../data/mockDataLayer'
+import VoteChips from '../components/VoteChips'
+import './PlaceVoting.css'
 
 // Just the first name, so "Samantha Chen" reads as "Samantha"
 function firstName(fullName) {
@@ -15,6 +17,24 @@ function mapsUrl({ coordinates, name }) {
 
 export default function PlaceDetail() {
   const { placeId } = useParams()
+  // Remount the local form state when moving directly to another place.
+  return <PlaceDetailContent key={placeId} placeId={placeId} />
+}
+
+function PlaceDetailContent({ placeId }) {
+  const [voting, setVoting] = useState(() => getPlaceVotingData(placeId))
+  const [voteMessage, setVoteMessage] = useState('')
+
+  function handleVote(value) {
+    const result = setPlaceVote(placeId, value)
+    if (!result.ok) {
+      setVoteMessage(result.error)
+      return
+    }
+    setVoting(result.voting)
+    setVoteMessage('Your vote has been updated.')
+  }
+
   const place = useMemo(() => getPlaceDetail(placeId), [placeId])
   // If the photo link is broken we fall back to the plain peach block behind it
   const [photoFailed, setPhotoFailed] = useState(false)
@@ -78,6 +98,17 @@ export default function PlaceDetail() {
             Google Maps
           </a>
         </div>
+
+        <section className="place-voting" aria-label="Vote on this place">
+          <VoteChips
+            value={voting?.value}
+            counts={voting?.tally}
+            onChange={handleVote}
+            disabled={!voting?.canVote}
+          />
+          {voting?.reason && <p className="place-voting__message">{voting.reason}</p>}
+          <p className="place-voting__message" role="status">{voteMessage}</p>
+        </section>
 
         <Link
           to={`/place/${place.id}/edit`}

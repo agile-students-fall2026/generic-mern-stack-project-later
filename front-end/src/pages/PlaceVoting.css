@@ -1,0 +1,13 @@
+.place-voting {
+  margin-top: 1.5rem;
+}
+
+.place-voting__message {
+  margin-top: 0.5rem;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
+.place-voting__message:empty {
+  display: none;
+}
