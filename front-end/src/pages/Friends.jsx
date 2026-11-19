@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import Avatar from '../components/Avatar'
-import { currentUserId } from '../data/demoData'
-import { filterFriendsByUsername, getFriendsWithSharedCities } from '../data/mockDataLayer'
+import { useApi } from '../hooks/useApi'
+import { LoadingState, ErrorState } from '../components/LoadState'
+import { getFriends } from '../api/friends'
 import { Link } from 'react-router'
 
 // "Paris" / "Paris, New York" / "No shared lists yet"
@@ -10,13 +11,15 @@ function sharedCitiesLabel(cities) {
 }
 
 export default function Friends() {
-  // Load friends once when the screen opens, same pattern as Invites.jsx
-  const [friends] = useState(() => getFriendsWithSharedCities(currentUserId))
+  // Load all friends once, then filter locally so typing doesn't hit the server
+  const { data, loading, error, retry } = useApi(getFriends)
+  const friends = data ?? []
   const [query, setQuery] = useState('')
 
-  // Worked out on every render, so the list updates as the user types
-  const visibleFriends = filterFriendsByUsername(friends, query)
-  const isSearching = query.trim().replace(/^@/, '') !== ''
+  // Same rule as the back-end: ignore case and a leading @
+  const wanted = query.trim().replace(/^@/, '').toLowerCase()
+  const visibleFriends = friends.filter((friend) => friend.username.toLowerCase().includes(wanted))
+  const isSearching = wanted !== ''
 
   return (
     <section className="flex flex-col gap-6 p-4">
@@ -39,7 +42,11 @@ export default function Friends() {
       <section aria-labelledby="your-friends-heading" className="flex flex-col gap-2">
         <h2 id="your-friends-heading" className="text-lg">Your friends</h2>
 
-        {friends.length === 0 ? (
+        {loading ? (
+          <LoadingState message="Loading friends…" />
+        ) : error ? (
+          <ErrorState message={error.message} onRetry={retry} />
+        ) : friends.length === 0 ? (
           <p className="text-sm text-muted">You haven't added any friends yet.</p>
         ) : visibleFriends.length === 0 ? (
           // role="status" so screen readers hear that the search found nothing
