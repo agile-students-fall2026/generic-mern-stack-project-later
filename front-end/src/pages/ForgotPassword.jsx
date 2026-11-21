@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
 import TextField from '../components/TextField'
-import './ForgotPassword.css'
+import Button from '../components/Button'
 
 function validateEmail(email) {
   if (!email.trim()) return 'Enter your email.'
@@ -45,32 +45,33 @@ export default function ForgotPassword() {
   }
 
   return (
-    <main className="forgot-page">
+    <main className="mx-auto flex min-h-screen w-full max-w-[27.5rem] flex-col bg-background px-5 py-10 text-ink">
       {/* Logo */}
-      <h1 className="forgot-logo">Later?</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Later?</h1>
 
       {sent ? (
         // Success state: shown after the form is submitted
         <>
-          <section className="forgot-intro">
-            <h2 className="forgot-title">Check your inbox.</h2>
+          <section className="mt-20">
+            <h2 className="text-4xl leading-tight font-bold tracking-tight">
+              Check your inbox.
+            </h2>
             {/* Worded as "if" on purpose, so we never reveal whether an account exists */}
-            <p className="forgot-subtitle">
+            <p className="mt-2 text-base leading-relaxed text-muted">
               If an account exists for {email.trim()}, we just sent a link to
               reset your password.
             </p>
           </section>
 
-          <div className="forgot-actions">
+          <div className="mt-8 flex flex-col gap-4">
             {/* Styled like a button, but it's a link because it goes to another page */}
-            <Link to="/login" className="forgot-back btn-secondary">
+            <Link to="/login" className="block min-h-11 w-full text-center btn-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
               Back to log in
             </Link>
             <button
               type="button"
               onClick={handleUseDifferentEmail}
-              className="forgot-retry"
-            >
+              className="self-center border-0 bg-transparent text-sm font-semibold text-brand hover:text-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
               Use a different email
             </button>
           </div>
@@ -78,15 +79,17 @@ export default function ForgotPassword() {
       ) : (
         // Default state: the form
         <>
-          <section className="forgot-intro">
-            <h2 className="forgot-title">Forgot your password?</h2>
-            <p className="forgot-subtitle">
+          <section className="mt-20">
+            <h2 className="text-4xl leading-tight font-bold tracking-tight">
+              Forgot your password?
+            </h2>
+            <p className="mt-2 text-base leading-relaxed text-muted">
               Enter your email and we'll send you a link to reset it.
             </p>
           </section>
 
           {/* noValidate turns off the browser's own popups */}
-          <form onSubmit={handleSubmit} noValidate className="forgot-form">
+          <form onSubmit={handleSubmit} noValidate className="mt-8 flex flex-col gap-6">
             <TextField
               label="Email"
               type="email"
@@ -99,15 +102,15 @@ export default function ForgotPassword() {
             />
 
             {/* Colors come from btn-primary in index.css, layout from ForgotPassword.css */}
-            <button type="submit" className="forgot-submit btn-primary hover:btn-primary-hover">
+            <Button type="submit" className= "mt-4 min-h-11 w-full btn-primary hover:btn-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
               Send reset link
-            </button>
+            </Button>
           </form>
 
           {/* For people who remembered it after all */}
-          <p className="forgot-footer">
+          <p className="mt-8 text-center text-sm text-ink">
             Remembered it?{' '}
-            <Link to="/login" className="forgot-link">
+            <Link to="/login" className="font-bold text-brand hover:text-brand-dark">
               Log in
             </Link>
           </p>
