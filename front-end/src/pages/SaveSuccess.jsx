@@ -1,5 +1,4 @@
 import { Link, useLocation, Navigate } from 'react-router'
-import './SaveSuccess.css'
 
 /**
  * Shown right after POST /api/saved-places succeeds.
@@ -13,19 +12,19 @@ export default function SaveSuccess() {
     return <Navigate to="/create" replace />
   }
   return (
-    <section className="save-success">
-      <h1 className="save-success-title">Saved!</h1>
-      <p className="save-success-message">
+    <section className="p-4 pb-20">
+      <h1 className="mb-4 text-[1.75rem]">Saved!</h1>
+      <p className="mb-6 leading-normal">
         <strong>{placeName}</strong> was added to your {cityName} list. Your group can vote on it
         from the city page.
       </p>
       <Link
-        className="btn-primary hover:btn-primary-hover save-success-cta"
+        className="btn-primary hover:btn-primary-hover mb-4 block w-full text-center"
         to={`/city/${cityId}`}
       >
         Open {cityName} list
       </Link>
-      <Link className="save-success-secondary" to="/create">
+      <Link className="block text-center text-muted underline" to="/create">
         Add another place
       </Link>
     </section>

@@ -6,7 +6,6 @@ import BackLink from '../components/BackLink'
 import { LoadingState, ErrorState } from '../components/LoadState'
 import { useApi } from '../hooks/useApi'
 import { getPlaceCard, savePlace } from '../api/createFlow'
-import './Identifying.css'
 
 /**
  * Place Found screen.
@@ -32,7 +31,7 @@ export default function Identifying() {
   // Opened the URL directly, with no link to work from
   if (!lookup || !placeId) {
     return (
-      <section className="flow-page">
+      <section className="p-4 pb-20">
         <p>Start by pasting a link on the Create screen.</p>
         <Link to="/create">Go to Create</Link>
       </section>
@@ -40,7 +39,7 @@ export default function Identifying() {
   }
   if (cardRequest.loading) {
     return (
-      <section className="flow-page">
+      <section className="p-4 pb-20">
         <BackLink to="/create" className="mb-6" />
         <LoadingState message="Finding this place…" />
       </section>
@@ -48,7 +47,7 @@ export default function Identifying() {
   }
   if (cardRequest.error) {
     return (
-      <section className="flow-page">
+      <section className="p-4 pb-20">
         <BackLink to="/create" className="mb-6" />
         <ErrorState message={cardRequest.error.message} onRetry={cardRequest.retry} />
       </section>
@@ -89,10 +88,10 @@ export default function Identifying() {
     })
   }
   return (
-    <section className="flow-page">
+    <section className="p-4 pb-20">
       <BackLink to="/create" className="mb-6" />
-      <p className="flow-eyebrow">Found it</p>
-      <h1 className="flow-title">Is this the place?</h1>
+      <p className="mb-1 text-sm text-muted">Found it</p>
+      <h1 className="mb-4 text-2xl font-bold">Is this the place?</h1>
       <PlaceConfirmCard
         thumbnailUrl={card.thumbnailUrl}
         name={card.name}
@@ -100,22 +99,22 @@ export default function Identifying() {
         categoryLabel={card.categoryLabel}
         sourceTag={card.sourceTag}
       />
-      <p className="flow-info-box">{card.sharingMessage}</p>
+      <p className="mb-4 border border-ink p-3">{card.sharingMessage}</p>
       {card.duplicate && (
         <DuplicateWarning placeName={card.name} placeId={card.placeId} />
       )}
       {saveError && (
-        <p className="flow-empty" role="alert">{saveError}</p>
+        <p className="mb-4 text-sm text-error" role="alert">{saveError}</p>
       )}
       <button
         type="button"
-        className="btn-primary hover:btn-primary-hover"
+        className="btn-primary hover:btn-primary-hover mb-3 w-full"
         disabled={Boolean(card.duplicate) || saving}
         onClick={handleSave}
       >
         {saving ? 'Saving…' : `Save to ${card.cityName}`}
       </button>
-      <button type="button" className="flow-link-button" onClick={handleNotIt}>
+      <button type="button" className="w-full p-2 text-muted underline" onClick={handleNotIt}>
         Not it? See other matches
       </button>
     </section>
