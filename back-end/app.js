@@ -10,6 +10,7 @@ const authRoutes = require("./routes/authRoutes");
 
 const { stripPasswordsMiddleware } = require("./utils/stripPasswords");
 const configRoutes = require("./routes/configRoutes");
+const friendRoutes = require("./routes/friendRoutes");
 const usersRoutes = require("./routes/usersRoutes");
 const savedPlacesRoutes = require("./routes/savedPlacesRoutes");
 const createFlowRoutes = require("./routes/createFlowRoutes");
@@ -36,6 +37,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api", configRoutes);
+app.use("/api", friendRoutes);
 app.use("/api", usersRoutes);
 app.use("/api", savedPlacesRoutes);
 app.use("/api", createFlowRoutes);
