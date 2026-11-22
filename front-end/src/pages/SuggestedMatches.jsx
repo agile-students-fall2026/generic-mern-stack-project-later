@@ -141,6 +141,14 @@ export default function SuggestedMatches() {
         placeholder="None of these, search instead"
       />
 
+      <Link
+        to="/create/search"
+        state={{ lookup, cityId, sourceUrl: lookup.url }}
+        className="mt-4 inline-flex min-h-11 items-center font-semibold text-brand underline"
+      >
+        None of these? Search manually
+      </Link>
+
       {selectedName && (
         <div className="flow-selected">
           <p>

@@ -1,13 +1,15 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { lookupLink } from '../api/createFlow'
 import './Create.css'
 import BackLink from '../components/BackLink'
 
 export default function Create() {
   const navigate = useNavigate()
+  const location = useLocation()
   // What the user typed in the link box
-  const [link, setLink] = useState('')
+  const [link, setLink] = useState(location.state?.sourceUrl ?? '')
+  const [manualSearch, setManualSearch] = useState(null)
   // Shown when the link is blank, unknown, or the server can't be reached
   const [error, setError] = useState('')
   // True while the lookup request is on its way, so the button can't be pressed twice
@@ -15,28 +17,33 @@ export default function Create() {
   function clearLink() {
     setLink('')
     setError('')
+    setManualSearch(null)
   }
 
   async function handleSubmit(event) {
     // Keep the page from reloading (default form behavior)
     event.preventDefault()
+    const sourceUrl = link.trim()
     setError('')
+    setManualSearch(null)
     setFinding(true)
     try {
-      const result = await lookupLink(link)
+      const result = await lookupLink(sourceUrl)
       // These two are normal answers, not HTTP errors. The server still returns 200.
       if (result.status === 'empty') {
         setError('Paste a link first.')
         return
       }
       if (result.status === 'not_found') {
-        setError('We could not find a place for that link. Try a demo URL from the comments in this file.')
+        setError('We could not find a place for that link. You can search for it yourself.')
+        setManualSearch({ sourceUrl })
         return
       }
       const { lookup } = result
       // Carry candidates and cityId forward. The next pages read them from
       // navigation state instead of calling the mock data layer.
       const nextState = {
+        sourceUrl,
         lookup,
         candidates: result.candidates ?? [],
         cityId: result.cityId,
@@ -53,6 +60,7 @@ export default function Create() {
       }
       // The demo link exists, but it has no place (lk_4).
       setError('We could not find a place for that link.')
+      setManualSearch(nextState)
     } catch (err) {
       // err.message is the server's { error: "..." }, or "Can't reach the server..."
       setError(err.message)
@@ -80,7 +88,12 @@ export default function Create() {
             type="url"
             name="link"
             value={link}
-            onChange={(event) => setLink(event.target.value)}
+            onChange={(event) => {
+              setLink(event.target.value)
+              setError('')
+              setManualSearch(null)
+            }}
+            disabled={finding}
             placeholder="link…"
             autoComplete="off"
           />
@@ -91,6 +104,7 @@ export default function Create() {
               className="add-place-clear"
               aria-label="Clear link"
               onClick={clearLink}
+              disabled={finding}
             >
               ×
             </button>
@@ -104,6 +118,11 @@ export default function Create() {
         <button type="submit" className="btn-primary hover:btn-primary-hover" disabled={finding}>
           {finding ? 'Finding…' : 'Find the place'}
         </button>
+        {manualSearch && (
+          <Link to="/create/search" state={manualSearch} className="min-h-11 btn-secondary text-center hover:bg-subtle">
+            Search manually
+          </Link>
+        )}
       </form>
     </section>
   )

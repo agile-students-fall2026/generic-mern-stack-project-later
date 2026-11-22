@@ -7,6 +7,7 @@
  */
 
 const express = require("express");
+const { cities } = require("../data/demoData");
 const {
   getCityById,
   getIdentifyingCard,
@@ -16,6 +17,12 @@ const {
 } = require("../logic/createFlow");
 
 const router = express.Router();
+
+// A failed lookup has no city; let the user choose from the searchable catalog.
+// Include cities without a joined list, since saving can create a new city list.
+router.get("/cities", (req, res) => {
+  res.json(cities.map(({ id, name, country }) => ({ id, name, country })));
+});
 
 /**
  * Body: { url: "https://..." }
