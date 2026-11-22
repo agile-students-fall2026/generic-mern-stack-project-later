@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import TextField from '../components/TextField'
-import './ChangePassword.css'
+import Button from '../components/Button'
 
 function validatePassword(password) {
   if (!password) return 'Enter a new password.'
@@ -45,17 +45,17 @@ export default function ChangePassword() {
     }
 
     return (
-        <main className="change-page">
+        <main className="mx-auto flex min-h-screen w-full max-w-[27.5rem] flex-col bg-background px-5 py-10 text-ink">
         {/* Logo */}
-        <h1 className="change-logo">Later?</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Later?</h1>
 
-        <section className="change-intro">
-            <h2 className="change-title">Set a new password.</h2>
-            <p className="change-subtitle">
+        <section className="mt-20">
+            <h2 className="text-4xl leading-tight font-bold tracking-tight">Set a new password.</h2>
+            <p className="mt-2 text-base leading-relaxed text-muted">
             Pick something you haven't used here before.
             </p>
         </section>
-        <form onSubmit={handleSubmit} noValidate className="change-form">
+        <form onSubmit={handleSubmit} noValidate className="mt-8 flex flex-col gap-6">
             <TextField
             label="New password"
             type="password"
@@ -77,9 +77,9 @@ export default function ChangePassword() {
             autoComplete="new-password"
             />
 
-            <button type="submit" className="change-submit btn-primary hover:btn-primary-hover">
+            <Button type="submit" className="mt-4 w-full">
             Update password
-            </button>
+            </Button>
         </form>
      </main>
     )
