@@ -8,9 +8,20 @@
  */
 
 const express = require("express");
-const { changePassword } = require("../logic/users");
+const { changePassword, validateUsername, isUsernameAvailable } = require("../logic/users");
 
 const router = express.Router();
+
+router.get("/users/username-available", (req, res) => {
+  const { username } = req.query;
+
+  const problem = validateUsername(username);
+  if (problem) {
+    return res.status(400).json({ error: problem });
+  }
+
+  res.json({ available: isUsernameAvailable(username) });
+});
 
 router.patch("/users/me/password", (req, res) => {
   const body = req.body || {};
