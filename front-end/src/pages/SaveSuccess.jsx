@@ -2,8 +2,8 @@ import { Link, useLocation, Navigate } from 'react-router'
 import './SaveSuccess.css'
 
 /**
- * Shown right after a place is saved from the Place Found screen.
- * Router state must include cityId and placeName (set in Identifying.jsx).
+ * Shown right after POST /api/saved-places succeeds.
+ * Identifying.jsx puts the server's placeName, cityName, and cityId in router state.
  */
 export default function SaveSuccess() {
   const location = useLocation()
@@ -12,7 +12,6 @@ export default function SaveSuccess() {
   if (!cityId || !placeName) {
     return <Navigate to="/create" replace />
   }
-
   return (
     <section className="save-success">
       <h1 className="save-success-title">Saved!</h1>

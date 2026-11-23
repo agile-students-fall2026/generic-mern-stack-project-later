@@ -1,72 +1,78 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { lookupLinkByUrl } from '../data/mockDataLayer'
+import { lookupLink } from '../api/createFlow'
 import './Create.css'
 import BackLink from '../components/BackLink'
 
 export default function Create() {
   const navigate = useNavigate()
-
   // What the user typed in the link box
   const [link, setLink] = useState('')
-
-  // Shown when the link is not in our mock data (or not_found in demoData)
+  // Shown when the link is blank, unknown, or the server can't be reached
   const [error, setError] = useState('')
-
+  // True while the lookup request is on its way, so the button can't be pressed twice
+  const [finding, setFinding] = useState(false)
   function clearLink() {
     setLink('')
     setError('')
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     // Keep the page from reloading (default form behavior)
     event.preventDefault()
     setError('')
-
-    const result = lookupLinkByUrl(link)
-
-    if (result.status === 'empty') {
-      setError('Paste a link first.')
-      return
+    setFinding(true)
+    try {
+      const result = await lookupLink(link)
+      // These two are normal answers, not HTTP errors. The server still returns 200.
+      if (result.status === 'empty') {
+        setError('Paste a link first.')
+        return
+      }
+      if (result.status === 'not_found') {
+        setError('We could not find a place for that link. Try a demo URL from the comments in this file.')
+        return
+      }
+      const { lookup } = result
+      // Carry candidates and cityId forward. The next pages read them from
+      // navigation state instead of calling the mock data layer.
+      const nextState = {
+        lookup,
+        candidates: result.candidates ?? [],
+        cityId: result.cityId,
+      }
+      // lookup.status is a second, different status. "ok" above only means
+      // the URL was in the demo list.
+      if (lookup.status === 'found') {
+        navigate('/create/identifying', { state: nextState })
+        return
+      }
+      if (lookup.status === 'ambiguous') {
+        navigate('/create/matches', { state: nextState })
+        return
+      }
+      // The demo link exists, but it has no place (lk_4).
+      setError('We could not find a place for that link.')
+    } catch (err) {
+      // err.message is the server's { error: "..." }, or "Can't reach the server..."
+      setError(err.message)
+    } finally {
+      setFinding(false)
     }
-
-    if (result.status === 'not_found') {
-      setError('We could not find a place for that link. Try a demo URL from the comments in this file.')
-      return
-    }
-
-    const { lookup } = result
-
-    // Next screens in the flow (will be built later)
-    if (lookup.status === 'found') {
-      navigate('/create/identifying', { state: { lookup } })
-      return
-    }
-
-    if (lookup.status === 'ambiguous') {
-      navigate('/create/matches', { state: { lookup } })
-      return
-    }
-
-    // linkLookups entry with status "not_found" (e.g. lk_4)
-    setError('We could not find a place for that link.')
   }
 
   return (
     <section className="add-place">
       {/* Back: goes to Home */}
       <BackLink to="/" label="Back to home" className="mb-6" />
-
       <h1 className="add-place-title">
         Saw a place?
         <br />
         Drop the link.
       </h1>
-
       <p className="add-place-hint">
         Paste a link from TikTok or Instagram. We find the place and pin it to the right city.
       </p>
-
       <form className="add-place-form" onSubmit={handleSubmit}>
         <div className="add-place-input-wrap">
           <input
@@ -90,33 +96,26 @@ export default function Create() {
             </button>
           )}
         </div>
-
         {error && (
           <p className="add-place-error" role="alert">
             {error}
           </p>
         )}
-
-        <button type="submit" className="btn-primary hover:btn-primary-hover">
-          Find the place
+        <button type="submit" className="btn-primary hover:btn-primary-hover" disabled={finding}>
+          {finding ? 'Finding…' : 'Find the place'}
         </button>
       </form>
     </section>
   )
 }
-
 /*
   Demo URLs (can copy-paste for test):
-
   Found (NYC):
   https://www.tiktok.com/@nyceats/video/7301
-
   Found (Paris):
   https://www.instagram.com/p/septime-paris
-
   Ambiguous - /create/matches:
   https://www.instagram.com/reel/paris-croissant
-
   Not found (error on this page):
   https://www.tiktok.com/@random/video/0000
 */
