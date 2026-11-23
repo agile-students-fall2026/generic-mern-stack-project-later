@@ -12,6 +12,9 @@ describe("City list routes", () => {
     expect(city.status).to.equal(200);
     expect(home.body).to.deep.equal([city.body]);
     expect(city.body).to.include({ id: "c_paris", name: "Paris", placeCount: 3 });
+    expect(city.body.coordinates).to.have.all.keys("lat", "lng");
+    expect(city.body.coordinates.lat).to.be.a("number");
+    expect(city.body.coordinates.lng).to.be.a("number");
     expect(city.body.members.map(({ id }) => id)).to.deep.equal(["u_1", "u_2", "u_4"]);
     for (const member of city.body.members) {
       expect(member).to.have.all.keys("id", "name", "photoUrl");

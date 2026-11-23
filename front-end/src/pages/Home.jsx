@@ -1,18 +1,14 @@
 import { Link } from 'react-router'
-import { api } from '../api/client.js'
+import { getMyCityLists } from '../api/cityLists'
+import Button from '../components/Button'
 import { useApi } from '../hooks/useApi.js'
 import { useInvitations } from '../hooks/useInvitations.js'
 import CityListCard from '../components/CityListCard.jsx'
 import MostSavedByFriends from '../components/MostSavedByFriends.jsx'
 import InviteBanner from '../components/InviteBanner.jsx'
-import './Home.css'
-
-function loadMyCityHeaders(options) {
-  return api.get('/api/lists', options)
-}
 
 export default function Home() {
-  const { data: cities, loading, error, retry } = useApi(loadMyCityHeaders)
+  const { data: cities, loading, error, retry } = useApi(getMyCityLists)
   const invitations = useInvitations()
   const invites = invitations.invites
 
@@ -21,24 +17,24 @@ export default function Home() {
     if (result) retry()
   }
 
-  if (loading) return <p>Loading your lists…</p>
+  if (loading) return <p className="px-5 py-10 text-muted" role="status">Loading your lists…</p>
 
   if (error) {
     return (
-      <div>
+      <div className="px-5 py-10">
         <p role="alert">{error.message}</p>
-        <button onClick={retry}>Try again</button>
+        <Button className="mt-4" onClick={retry}>Try again</Button>
       </div>
     )
   }
 
   return (
-    <main>
-      <header className="home-header">
-        <span className="home-header__logo">Later?</span>
+    <section>
+      <header className="flex items-center justify-between px-4 pt-6 pb-4">
+        <h1 className="text-2xl font-bold text-ink">Later?</h1>
         <Link
           to="/invites"
-          className="home-header__bell"
+          className="relative inline-flex size-11 items-center justify-center rounded-full border border-border text-ink"
           aria-label={invites.length > 0 ? `Invitations, ${invites.length} new` : 'Invitations'}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -47,14 +43,14 @@ export default function Home() {
             <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
           </svg>
           {/* dot only when something is waiting */}
-          {invites.length > 0 && <span className="home-header__dot" aria-hidden="true" />}
+          {invites.length > 0 && <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-brand" aria-hidden="true" />}
         </Link>
       </header>
 
       {invitations.error && (
-        <div className="home-invite-error">
+        <div className="mx-4 mb-4 rounded-card bg-peach px-4 py-3 text-sm">
           <p role="alert">{invitations.error}</p>
-          <button type="button" onClick={invitations.retry}>Try again</button>
+          <Button variant="secondary" onClick={invitations.retry}>Try again</Button>
         </div>
       )}
 
@@ -65,16 +61,16 @@ export default function Home() {
         </fieldset>
       )}
       {invites.length > 1 && (
-        <Link to="/invites" className="home-invite-more">See all {invites.length} invites</Link>
+        <Link to="/invites" className="mx-4 -mt-2 mb-4 block text-sm font-semibold text-brand">See all {invites.length} invites</Link>
       )}
 
       {/* empty state for new users who aren't on any lists yet */}
       {cities.length === 0 ? (
-        <p>No lists yet. Paste a link to save your first place.</p>
+        <p className="px-5 py-6 text-muted">No lists yet. <Link className="font-semibold text-brand" to="/create">Paste a link</Link> to save your first place.</p>
       ) : (
         cities.map((city) => <CityListCard key={city.id} city={city} />)
       )}
       <MostSavedByFriends />
-    </main>
+    </section>
   )
 }
