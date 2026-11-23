@@ -1,23 +1,29 @@
-import { useMemo } from 'react'
 import { Link, useNavigate } from 'react-router'
 import Avatar from '../components/Avatar'
-import { currentUserId } from '../data/demoData'
-import { getUserProfile } from '../data/mockDataLayer'
+import { getMyProfile } from '../api/users'
+import { useApi } from '../hooks/useApi'
 
 // The three little tags under "Your vibe" take turns using these colors
 const chipColors = ['bg-peach', 'bg-powder', 'bg-sage']
 
 export default function Profile() {
   const navigate = useNavigate()
-  const profile = useMemo(() => getUserProfile(currentUserId), [])
+  const { data: profile, loading, error, retry } = useApi(getMyProfile)
 
-  if (!profile) {
+  if (loading) {
+    return <p role="status" className="px-5 py-10 text-center">Loading your profile…</p>
+  }
+
+  if (error || !profile) {
     return (
       <section className="px-5 py-10 text-center">
         <h1 className="text-2xl font-semibold">We couldn’t load your profile</h1>
-        <Link to="/login" className="mt-4 inline-block font-semibold text-brand hover:text-brand-dark">
-          Log in again
-        </Link>
+        <p role="alert" className="mt-2 text-sm text-muted">
+          {error?.message || 'Your profile is unavailable.'}
+        </p>
+        <button type="button" onClick={retry} className="btn-secondary mt-4">
+          Try again
+        </button>
       </section>
     )
   }

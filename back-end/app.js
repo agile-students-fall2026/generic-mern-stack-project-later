@@ -21,6 +21,7 @@ const app = express();
 
 // --- Middleware ---
 app.use(cors());
+app.patch("/api/users/me", express.json({ limit: "7mb" }));
 app.use(express.json());
 app.use(stripPasswordsMiddleware);
 app.use("/api", authRoutes);
