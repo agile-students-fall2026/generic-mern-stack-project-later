@@ -1,8 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router'
 import Avatar from '../components/Avatar'
-import { currentUserId, VOTE_OPTIONS } from '../data/demoData'
-import { getFriendProfile, sendListInvites } from '../data/mockDataLayer'
+import { currentUserId } from '../data/demoData'
+import { sendListInvites } from '../data/mockDataLayer'
+import { useApi } from '../hooks/useApi'
+import { LoadingState, ErrorState } from '../components/LoadState'
+import { getFriend } from '../api/friends'
+import { getConfig } from '../api/config'
 import BackLink from '../components/BackLink'
 import Button from '../components/Button'
 
@@ -11,8 +15,8 @@ function formatMonthYear(isoDate) {
   return new Date(isoDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
 }
 
-function voteLabel(value) {
-  return VOTE_OPTIONS.find((option) => option.value === value)?.label ?? 'Not voted'
+function voteLabel(value, voteOptions) {
+  return voteOptions.find((option) => option.value === value)?.label ?? 'Not voted'
 }
 
 function firstName(fullName) {
@@ -21,15 +25,20 @@ function firstName(fullName) {
 
 export default function FriendProfile() {
   const { userId } = useParams()
-  const data = useMemo(() => getFriendProfile(currentUserId, userId), [userId])
+  // The server 404s on your own id, so skip the request and redirect below
+  const isSelf = userId === currentUserId
+  const profile = useApi((options) => (isSelf ? Promise.resolve(null) : getFriend(userId, options)), [userId])
+  const config = useApi(getConfig) // vote labels
   const [pickerOpen, setPickerOpen] = useState(false)
   // Lists invited to on this visit (the mock doesn't save invites anywhere)
   const [invitedListIds, setInvitedListIds] = useState(() => new Set())
   const [notice, setNotice] = useState('')
 
-  if (data.status === 'self') return <Navigate to="/profile" replace />
+  if (isSelf) return <Navigate to="/profile" replace />
 
-  if (data.status === 'not_found') {
+  if (profile.loading || config.loading) return <LoadingState message="Loading profile…" />
+
+  if (profile.error?.status === 404) {
     return (
       <section className="px-5 py-10 text-center">
         <h1 className="text-2xl font-semibold">We couldn’t find this friend</h1>
@@ -39,6 +48,12 @@ export default function FriendProfile() {
     )
   }
 
+  if (profile.error || config.error) {
+    const failed = profile.error ?? config.error
+    return <ErrorState message={failed.message} onRetry={() => { profile.retry(); config.retry() }} />
+  }
+
+  const data = profile.data
   const { friend, stats, sharedCities, recentlySaved, invitableLists } = data
   const name = firstName(friend.name)
   const canInviteSomewhere = invitableLists.some(
@@ -115,7 +130,7 @@ export default function FriendProfile() {
                   </p>
                 </div>
                 <span className={`shrink-0 text-sm ${item.myVote ? 'font-semibold' : 'text-muted'}`}>
-                  {voteLabel(item.myVote)}
+                  {voteLabel(item.myVote, config.data.voteOptions)}
                 </span>
               </Link>
             </li>

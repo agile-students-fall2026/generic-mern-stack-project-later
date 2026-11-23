@@ -1,40 +1,18 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
-import { loadMostSavedByFriends } from '../data/mockDataLayer.js'
+import { useApi } from '../hooks/useApi.js'
+import { getMostSavedByFriends } from '../api/friends.js'
 import CategoryTag from './CategoryTag.jsx'
 import Button from './Button.jsx'
 
 /**
- * home section (#80): places friends saved most, from mock data.
+ * home section (#80): places friends saved most, from GET /api/friends/most-saved.
  * each tile opens that place's detail page.
  * loads its own data so it never blocks the city cards above it.
  */
 export default function MostSavedByFriends() {
-  const [places, setPlaces] = useState([])
-  const [status, setStatus] = useState('loading') // 'loading' | 'ready' | 'error'
-  const [reloadKey, setReloadKey] = useState(0)
-
-  useEffect(() => {
-    const controller = new AbortController()
-
-    loadMostSavedByFriends({ signal: controller.signal })
-      .then((data) => {
-        setPlaces(data)
-        setStatus('ready')
-      })
-      .catch((err) => {
-        // AbortError = we cancelled on purpose (left Home / retried), not a real failure
-        if (err.name !== 'AbortError') setStatus('error')
-      })
-
-    return () => controller.abort()
-  }, [reloadKey])
-
-  // set loading here, not inside the effect, so the react-hooks lint rule stays happy
-  function retry() {
-    setStatus('loading')
-    setReloadKey((k) => k + 1)
-  }
+  const { data, loading, error, retry } = useApi(getMostSavedByFriends)
+  const places = data ?? []
+  const status = loading ? 'loading' : error ? 'error' : 'ready'
 
   return (
     <section className="px-4 pb-6 pt-2" aria-labelledby="friends-saved-title">

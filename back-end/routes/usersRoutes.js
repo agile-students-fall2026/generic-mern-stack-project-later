@@ -8,7 +8,7 @@
  */
 
 const express = require("express");
-const { changePassword } = require("../logic/users");
+const { changePassword, validateUsername, isUsernameAvailable } = require("../logic/users");
 
 const { currentUserId } = require("../data/demoData");
 const { getUserProfile, updateCurrentProfile } = require("../logic/profiles");
@@ -21,9 +21,19 @@ function sendProfile(userId, res) {
   return res.json(profile);
 }
 
-// Express checks routes in order, so the literal "me" route goes first.
-router.get("/users/me", (req, res) => sendProfile(currentUserId, res));
+// Literal paths must precede /users/:id so availability is not a profile ID.
+router.get("/users/username-available", (req, res) => {
+  const { username } = req.query;
 
+  const problem = validateUsername(username);
+  if (problem) {
+    return res.status(400).json({ error: problem });
+  }
+
+  res.json({ available: isUsernameAvailable(username) });
+});
+
+router.get("/users/me", (req, res) => sendProfile(currentUserId, res));
 router.get("/users/:id", (req, res) => sendProfile(req.params.id, res));
 
 router.patch("/users/me", (req, res) => {

@@ -1,34 +1,24 @@
-import { useMemo } from 'react'
 import { Link, useParams } from 'react-router'
 import Avatar from '../components/Avatar'
-import { currentUserId } from '../data/demoData'
-import { getInviteToListData, getListByCityId } from '../data/mockDataLayer'
-import BackLink from '../components/BackLink'
+import { getListMembersData } from '../api/listMembers'
+import { useApi } from '../hooks/useApi'
+import { ErrorState, LoadingState } from '../components/LoadState'
 
 export default function Members() {
   const { cityId } = useParams()
-  // The invite screen already needs the list's members, so we reuse the same lookup
-  const data = useMemo(() => getInviteToListData(cityId), [cityId])
-  const ownerId = getListByCityId(cityId)?.ownerId
+  return <MembersList key={cityId} cityId={cityId} />
+}
 
-  // No list for this city
-  if (!data) {
+function MembersList({ cityId }) {
+  const { data, loading, error, retry } = useApi((options) => getListMembersData(cityId, options), [cityId])
+
+  if (loading) return <LoadingState message="Loading members…" />
+  if (error) {
     return (
       <section className="px-5 py-10 text-center">
-        <h1 className="text-2xl font-semibold">City list not found</h1>
-        <BackLink to={`/city/${data.cityId}`} label={`Back to ${data.cityName}`} className="mb-6" />
-      </section>
-    )
-  }
-
-  // Only people on the list get to see who else is on it
-  if (data.status === 'forbidden') {
-    return (
-      <section className="px-5 py-10 text-center">
-        <h1 className="text-2xl font-semibold">Members are private</h1>
-        <p className="mt-2 text-sm text-muted">Join this list to see who is on it.</p>
-        <Link to="/invites" className="mt-4 inline-block font-semibold text-brand hover:text-brand-dark">
-          Check your invitations
+        <ErrorState message={error.message} onRetry={error.status === 404 ? undefined : retry} />
+        <Link to="/" className="font-semibold text-brand hover:text-brand-dark">
+          Back to your lists
         </Link>
       </section>
     )
@@ -63,11 +53,11 @@ export default function Members() {
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold">
                 {member.name}
-                {member.id === currentUserId && <span className="font-normal text-muted"> (you)</span>}
+                {member.id === data.currentUserId && <span className="font-normal text-muted"> (you)</span>}
               </p>
               <p className="truncate text-sm text-muted">@{member.username}</p>
             </div>
-            {member.id === ownerId && (
+            {member.id === data.ownerId && (
               <span className="rounded-pill bg-sage px-3 py-1 text-xs font-semibold text-ink">Owner</span>
             )}
           </li>
