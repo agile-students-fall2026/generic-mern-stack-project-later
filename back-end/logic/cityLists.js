@@ -13,7 +13,7 @@ function getCityHeader(list) {
     .filter(Boolean)
     .map(({ id, name, photoUrl }) => ({ id, name, photoUrl }));
   const placeCount = savedPlaces.filter((saved) => saved.listId === list.id).length;
-  return { id: city.id, name: city.name, placeCount, members };
+  return { id: city.id, name: city.name, coordinates: city.coordinates, placeCount, members };
 }
 
 function getRankedPlaces(list, categoryId) {

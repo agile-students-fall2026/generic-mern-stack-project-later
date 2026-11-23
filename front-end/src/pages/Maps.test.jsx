@@ -6,10 +6,16 @@ import CityPage from './CityPage'
 import MapTab from './MapTab'
 import PlaceMap from '../components/PlaceMap'
 import * as data from '../data/mockDataLayer'
+import * as cityApi from '../api/cityLists'
+import * as configApi from '../api/config'
 
 // JSDOM does not fetch image resources: these tests exercise real Leaflet DOM
 // and event handling without downloading public map tiles.
 beforeEach(() => {
+  vi.spyOn(cityApi, 'getMyCityLists').mockImplementation(async () => data.getUserCityHeaders('u_1'))
+  vi.spyOn(cityApi, 'getCityList').mockImplementation(async (id) => data.getCityHeaders().find((city) => city.id === id))
+  vi.spyOn(cityApi, 'getCityPlaces').mockImplementation(async (id) => data.getRankedCityPlaces(id))
+  vi.spyOn(configApi, 'getConfig').mockResolvedValue({ categories: data.getPlaceCategories() })
   // Leaflet needs a viewport size; JSDOM has no layout engine.
   vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(400)
   vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(320)
@@ -123,7 +129,7 @@ describe('Map tab', () => {
   })
 
   it('switches among joined cities and all cities while preserving the category', async () => {
-    vi.spyOn(data, 'loadMyCityHeaders').mockResolvedValue(data.getCityHeaders())
+    cityApi.getMyCityLists.mockResolvedValue(data.getCityHeaders())
     const router = renderMap('/map')
     const select = await screen.findByRole('combobox', { name: 'City' })
     expect(screen.getAllByRole('button', { name: / — / })).toHaveLength(8)
@@ -141,7 +147,7 @@ describe('Map tab', () => {
   })
 
   it('provides useful links when the user has no lists', async () => {
-    vi.spyOn(data, 'loadMyCityHeaders').mockResolvedValue([])
+    cityApi.getMyCityLists.mockResolvedValue([])
     renderMap('/map')
     await screen.findByRole('heading', { name: 'No city lists yet' })
     expect(screen.getByRole('link', { name: 'Add a place' }).getAttribute('href')).toBe('/create')
@@ -149,10 +155,10 @@ describe('Map tab', () => {
   })
 
   it('retries city loading without keeping an error screen', async () => {
-    vi.spyOn(data, 'loadMyCityHeaders').mockRejectedValue(new Error('offline'))
+    cityApi.getMyCityLists.mockRejectedValue(new Error('offline'))
     renderMap('/map')
     await screen.findByRole('heading', { name: 'We couldn’t load your cities' })
-    data.loadMyCityHeaders.mockResolvedValue(data.getCityHeaders())
+    cityApi.getMyCityLists.mockResolvedValue(data.getCityHeaders())
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
     await screen.findByRole('combobox', { name: 'City' })
   })

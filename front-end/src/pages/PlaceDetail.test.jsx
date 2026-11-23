@@ -57,7 +57,8 @@ describe('PlaceDetail', () => {
 
         expect(screen.getByText('Loading place…')).toBeTruthy()
         expect(await screen.findByRole('heading', { name: 'Sacré-Cœur' })).toBeTruthy()
-        expect(screen.getByText('Viewpoint · Montmartre · saved by Samantha from TikTok')).toBeTruthy()
+        expect(screen.getByText('Viewpoint')).toBeTruthy()
+        expect(screen.getByText('Montmartre · saved by Samantha from TikTok')).toBeTruthy()
         expect(await screen.findByText('Tap a vote to let the group know.')).toBeTruthy()
         expect(getPlace).toHaveBeenCalledWith('p_6', expect.anything())
         expect(getPlaceVotes).toHaveBeenCalledWith('sp_6', expect.anything())

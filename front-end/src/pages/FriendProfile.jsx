@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router'
 import Avatar from '../components/Avatar'
 import { currentUserId } from '../data/demoData'
-import { sendListInvites } from '../data/mockDataLayer'
+import { sendListInvites } from '../api/listMembers'
 import { useApi } from '../hooks/useApi'
 import { LoadingState, ErrorState } from '../components/LoadState'
 import { getFriend } from '../api/friends'
@@ -30,9 +30,11 @@ export default function FriendProfile() {
   const profile = useApi((options) => (isSelf ? Promise.resolve(null) : getFriend(userId, options)), [userId])
   const config = useApi(getConfig) // vote labels
   const [pickerOpen, setPickerOpen] = useState(false)
-  // Lists invited to on this visit (the mock doesn't save invites anywhere)
+  // Successful invitations sent on this visit.
   const [invitedListIds, setInvitedListIds] = useState(() => new Set())
   const [notice, setNotice] = useState('')
+  const [sending, setSending] = useState(false)
+  const [inviteError, setInviteError] = useState('')
 
   if (isSelf) return <Navigate to="/profile" replace />
 
@@ -60,11 +62,20 @@ export default function FriendProfile() {
     (list) => !list.alreadyInvited && !invitedListIds.has(list.listId),
   )
 
-  function invite(list) {
-    sendListInvites({ listId: list.listId, fromUserId: currentUserId, toUserIds: [friend.id] })
-    setInvitedListIds((prev) => new Set(prev).add(list.listId))
-    setNotice(`Invited ${name} to ${list.cityName}.`)
-    setPickerOpen(false)
+  async function invite(list) {
+    setSending(true)
+    setInviteError('')
+    setNotice('')
+    try {
+      await sendListInvites({ listId: list.listId, toUserIds: [friend.id] })
+      setInvitedListIds((prev) => new Set(prev).add(list.listId))
+      setNotice(`Invited ${name} to ${list.cityName}.`)
+      setPickerOpen(false)
+    } catch (error) {
+      setInviteError(error.message)
+    } finally {
+      setSending(false)
+    }
   }
 
   const statTiles = [
@@ -143,6 +154,7 @@ export default function FriendProfile() {
           {notice}
         </p>
       )}
+      {inviteError && <p role="alert" className="mt-4 text-sm text-error">{inviteError}</p>}
 
       <div className="mt-8">
         {invitableLists.length === 0 ? (
@@ -151,7 +163,7 @@ export default function FriendProfile() {
           <>
             <Button
               onClick={() => setPickerOpen((open) => !open)}
-              disabled={!canInviteSomewhere}
+              disabled={!canInviteSomewhere || sending}
               aria-expanded={pickerOpen}
               className="w-full"
             >
@@ -167,7 +179,8 @@ export default function FriendProfile() {
                       <button
                         type="button"
                         onClick={() => invite(list)}
-                        disabled={invited}
+                        aria-label={`Invite ${name} to ${list.cityName}`}
+                        disabled={invited || sending}
                         className="flex w-full items-center justify-between rounded-button border border-border px-4 py-3 text-left hover:border-brand focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-brand disabled:opacity-50 disabled:hover:border-border"
                       >
                         <span className="font-semibold">{list.cityName}</span>

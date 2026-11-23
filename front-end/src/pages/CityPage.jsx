@@ -1,106 +1,57 @@
-import { useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import CityHeader from '../components/CityHeader'
 import RankedCityList from '../components/RankedCityList'
 import PlaceMap from '../components/PlaceMap'
 import CategoryFilter from '../components/CategoryFilter'
+import Button from '../components/Button'
+import { LoadingState } from '../components/LoadState'
 import { filterPlacesByCategory } from '../components/mapPresentation'
-import { getCityById, getPlaceCategories, getRankedCityPlaces, loadCityHeaders } from '../data/mockDataLayer'
-import './CityPage.css'
+import { getCityList, getCityPlaces } from '../api/cityLists'
+import { getConfig } from '../api/config'
+import { useApi } from '../hooks/useApi'
 
 export default function CityPage() {
   const { cityId } = useParams()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const [attempt, setAttempt] = useState(0)
-  const [result, setResult] = useState(null)
-  const view = searchParams.get('view') === 'map' ? 'map' : 'list'
-  const categoryParam = searchParams.get('category')
-  const category = getPlaceCategories().some(({ id }) => id === categoryParam) ? categoryParam : 'all'
-  const currentResult = result?.cityId === cityId && result?.attempt === attempt
-    ? result
-    : null
-
-  useEffect(() => {
-    const controller = new AbortController()
-
-    async function loadHeader() {
-      try {
-        const cities = await loadCityHeaders({ signal: controller.signal })
-        const city = cities.find((item) => item.id === cityId)
-        if (!controller.signal.aborted) {
-          setResult({ cityId, attempt, status: city ? 'ready' : 'missing', city })
-        }
-      } catch {
-        if (!controller.signal.aborted) {
-          setResult({ cityId, attempt, status: 'error' })
-        }
-      }
-    }
-
-    loadHeader()
-    return () => controller.abort()
-  }, [cityId, attempt])
-
-  function changeView(nextView) {
-    if (nextView === view) return
-    setSearchParams((previous) => {
+  const [params, setParams] = useSearchParams()
+  const { data, loading, error, retry } = useApi(async (options) => {
+    const [city, places, config] = await Promise.all([
+      getCityList(cityId, options), getCityPlaces(cityId, options), getConfig(options),
+    ])
+    return { city, places, categories: config.categories }
+  }, [cityId])
+  const view = params.get('view') === 'map' ? 'map' : 'list'
+  function change(name, value) {
+    setParams((previous) => {
       const next = new URLSearchParams(previous)
-      next.set('view', nextView)
+      if (value === 'all') next.delete(name)
+      else next.set(name, value)
       return next
     })
   }
-
-  function changeCategory(nextCategory) {
-    setSearchParams((previous) => {
-      const next = new URLSearchParams(previous)
-      if (nextCategory === 'all') next.delete('category')
-      else next.set('category', nextCategory)
-      return next
-    })
-  }
-
-  if (!currentResult) {
-    return <p className="city-page-message" role="status">Loading city…</p>
-  }
-
-  if (currentResult.status !== 'ready') {
-    const missing = currentResult.status === 'missing'
-    return (
-      <section className="city-page-message">
-        <h1 className="city-page-message-title">
-          {missing ? 'City not found' : 'We couldn’t load this city'}
-        </h1>
-        <p>{missing ? 'This city list is unavailable.' : 'Please try again in a moment.'}</p>
-        {!missing && (
-          <button className="city-page-retry" type="button" onClick={() => setAttempt(attempt + 1)}>
-            Try again
-          </button>
-        )}
-        <Link className="city-page-home" to="/">Back to your lists</Link>
-      </section>
-    )
-  }
-
-  const { city } = currentResult
-  const allPlaces = getRankedCityPlaces(city.id)
-  const visiblePlaces = filterPlacesByCategory(allPlaces, category)
-  return (
-    <section className="city-page" aria-label={`${city.name} city list`}>
-      <CityHeader city={city} view={view} onViewChange={changeView} />
-      <CategoryFilter value={category} onChange={changeCategory} />
-      <section id="city-view" className={`city-page-view city-page-view--${view}`} aria-label={`${view === 'map' ? 'Map' : 'List'} view`}>
-        {visiblePlaces.length === 0 && category !== 'all' && (
-          <div className="place-filter-empty" role="status">
-            <p>No saved places in this category.</p>
-            <button type="button" onClick={() => changeCategory('all')}>Show all categories</button>
-          </div>
-        )}
-        {view === 'list' ? (
-          (visiblePlaces.length > 0 || category === 'all') && <RankedCityList places={visiblePlaces} />
-        ) : (
-          <PlaceMap places={visiblePlaces} center={getCityById(city.id)?.coordinates} label={city.name} />
-        )}
-      </section>
+  if (loading) return <LoadingState message="Loading city…" />
+  if (error) {
+    const missing = error.status === 404
+    return <section className="px-5 py-8 leading-relaxed text-muted">
+      <h1 className="mb-3 text-2xl font-semibold text-ink">{missing ? 'City not found' : 'We couldn’t load this city'}</h1>
+      <p role={missing ? undefined : 'alert'}>{missing ? 'This city list is unavailable.' : error.message}</p>
+      {!missing && <Button className="mt-5" onClick={retry}>Try again</Button>}
+      <Link className="mt-5 block underline" to="/">Back to your lists</Link>
     </section>
-  )
+  }
+  const { city, places, categories } = data
+  const category = categories.some(({ id }) => id === params.get('category')) ? params.get('category') : 'all'
+  const visible = filterPlacesByCategory(places, category)
+  return <section className="text-ink" aria-label={city.name + ' city list'}>
+    <CityHeader city={city} view={view} onViewChange={(value) => change('view', value)} />
+    <CategoryFilter categories={categories} value={category} onChange={(value) => change('category', value)} />
+    <section id="city-view" className="mx-5 my-6 min-w-0" aria-label={view === 'map' ? 'Map view' : 'List view'}>
+      {visible.length === 0 && category !== 'all' && <div className="mt-3 rounded-xl bg-subtle p-4 text-sm" role="status">
+        <p>No saved places in this category.</p>
+        <Button variant="secondary" className="mt-2" onClick={() => change('category', 'all')}>Show all categories</Button>
+      </div>}
+      {view === 'list'
+        ? (visible.length > 0 || category === 'all') && <RankedCityList places={visible} />
+        : <PlaceMap places={visible} center={city.coordinates} label={city.name} />}
+    </section>
+  </section>
 }
