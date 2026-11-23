@@ -13,3 +13,8 @@ export function getMyProfile(options) {
 export function updateMyProfile(fields, options) {
   return api.patch('/api/users/me', fields, options)
 }
+
+// GET /api/users/search?q= → non-friends [{ id, name, username, photoUrl }]
+export function searchUsers(query, options) {
+  return api.get(`/api/users/search?q=${encodeURIComponent(query)}`, options)
+}
