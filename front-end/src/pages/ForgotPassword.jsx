@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import TextField from '../components/TextField'
 import Button from '../components/Button'
+import { forgotPassword } from '../api/auth'
 
 function validateEmail(email) {
   if (!email.trim()) return 'Enter your email.'
@@ -15,6 +16,9 @@ export default function ForgotPassword() {
   // Has the user left the email box yet? Keeps the error hidden until they have.
   const [touched, setTouched] = useState(false)
 
+  // The server's message if the request fails 
+  const [formError, setFormError] = useState('')
+
   // Flips to true after a successful submit, which swaps the form for the
   // "check your inbox" message.
   const [sent, setSent] = useState(false)
@@ -22,27 +26,33 @@ export default function ForgotPassword() {
   // Error stays blank until the field has been touched
   const emailError = touched ? validateEmail(email) : ''
 
-  function handleSubmit(event) {
-    // Keeps the browser from reloading the page
-    event.preventDefault()
+  async function handleSubmit(event) {
+  // Keeps the browser from reloading the page
+  event.preventDefault()
+  setFormError('')
 
-    // Count the field as touched so an empty box shows its error
-    setTouched(true)
+  // Count the field as touched so an empty box shows its error
+  setTouched(true)
 
-    // Something's wrong, so stay here and let them fix it
-    if (validateEmail(email)) return
+  // Something's wrong, so stay here and let them fix it
+  if (validateEmail(email)) return
 
-    // TODO: replace with a real backend call that emails a reset link.
+  try {
+    await forgotPassword(email.trim())
     // Only show the success message once the request goes through.
     setSent(true)
+  } catch (err) {
+    setFormError(err.message)
   }
+}
 
   // Lets someone who typo'd their email go back and try again
   function handleUseDifferentEmail() {
-    setSent(false)
-    setTouched(false)
-    setEmail('')
-  }
+  setSent(false)
+  setTouched(false)
+  setEmail('')
+  setFormError('')
+}
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-[27.5rem] flex-col bg-background px-5 py-10 text-ink">
@@ -101,7 +111,14 @@ export default function ForgotPassword() {
               autoComplete="email"
             />
 
-            {/* Colors come from btn-primary in index.css, layout from ForgotPassword.css */}
+            {formError && (                                
+             <p role="alert" className="text-sm text-red-600">
+            {formError}
+             </p>
+            )}
+
+
+            {/* Colors come from btn-primary in index.css */}
             <Button type="submit" className= "mt-4 min-h-11 w-full btn-primary hover:btn-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
               Send reset link
             </Button>

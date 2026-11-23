@@ -1,7 +1,10 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import Avatar from '../components/Avatar'
 import { getMyProfile } from '../api/users'
 import { useApi } from '../hooks/useApi'
+
+import { logout } from '../api/auth'
 
 // The three little tags under "Your vibe" take turns using these colors
 const chipColors = ['bg-peach', 'bg-powder', 'bg-sage']
@@ -9,6 +12,8 @@ const chipColors = ['bg-peach', 'bg-powder', 'bg-sage']
 export default function Profile() {
   const navigate = useNavigate()
   const { data: profile, loading, error, retry } = useApi(getMyProfile)
+
+  const [signOutError, setSignOutError] = useState('')
 
   if (loading) {
     return <p role="status" className="px-5 py-10 text-center">Loading your profile…</p>
@@ -34,11 +39,16 @@ export default function Profile() {
     { label: 'places visited', value: profile.stats.placesVisited },
   ]
 
-  function handleSignOut() {
-    // There is no real login session yet, so signing out just goes back to the log-in screen.
-    // replace stops the back button from returning to a screen for a signed-out user.
-    navigate('/login', { replace: true })
-  }
+  async function handleSignOut() {
+    setSignOutError('')
+    try {
+      await logout()
+      // replace stops the back button from returning to a screen for a signed-out user.
+      navigate('/login', { replace: true })
+    } catch (err) {
+      setSignOutError(err.message)
+   }
+}
 
   return (
     <section className="px-5 py-6">
@@ -121,6 +131,13 @@ export default function Profile() {
       >
         Log out
       </button>
+
+    {signOutError && (
+      <p role="alert" className="mt-2 text-sm text-red-600">
+      {signOutError}
+    </p>
+  )}
+
     </section>
   )
 }
