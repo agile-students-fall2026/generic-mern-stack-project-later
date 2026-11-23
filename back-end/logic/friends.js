@@ -47,9 +47,9 @@ function filterFriendsByUsername(friends, query = "") {
 function getMostSavedByFriends(userId, limit = 6) {
     const friends = getFriendsForUser(userId);
     const friendIds = new Set(friends.map((friend) => friend.id));
-
+    const myListIds = new Set(lists.filter((list) => list.memberIds.includes(userId)).map((list) => list.id));
     const byPlace = new Map(); // placeId -> { savers: Set, lastSavedAt }
-    for (const saved of savedPlaces.filter((item) => friendIds.has(item.savedBy))) {
+    for (const saved of savedPlaces.filter((item) => friendIds.has(item.savedBy) && myListIds.has(item.listId))) {
         const entry = byPlace.get(saved.placeId) ?? { savers: new Set(), lastSavedAt: "" };
         entry.savers.add(saved.savedBy);
         if (saved.savedAt > entry.lastSavedAt) entry.lastSavedAt = saved.savedAt;
