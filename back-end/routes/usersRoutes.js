@@ -13,6 +13,8 @@ const { changePassword, validateUsername, isUsernameAvailable } = require("../lo
 const { currentUserId } = require("../data/demoData");
 const { getUserProfile, updateCurrentProfile } = require("../logic/profiles");
 
+const { searchNonFriends } = require("../logic/friends");
+
 const router = express.Router();
 
 function sendProfile(userId, res) {
@@ -31,6 +33,12 @@ router.get("/users/username-available", (req, res) => {
   }
 
   res.json({ available: isUsernameAvailable(username) });
+});
+
+router.get("/users/search", (req, res) => {
+  // Same guard as /friends: Express 5 turns ?q=a&q=b into an array
+  const q = typeof req.query.q === "string" ? req.query.q : "";
+  res.json(searchNonFriends(currentUserId, q));
 });
 
 router.get("/users/me", (req, res) => sendProfile(currentUserId, res));

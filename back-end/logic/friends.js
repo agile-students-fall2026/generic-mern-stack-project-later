@@ -43,6 +43,29 @@ function filterFriendsByUsername(friends, query = "") {
     return friends.filter((friend) => friend.username.toLowerCase().includes(wanted));
 }
 
+/** Can the viewer find `user` in search? Respects settings.discoverability. */
+function canDiscover(user, viewerFriendIds) {
+    const setting = user.settings?.discoverability ?? "everyone";
+    if (setting === "everyone") return true;
+    if (setting === "friends_of_friends") {
+        return getFriendsForUser(user.id).some((friend) => viewerFriendIds.has(friend.id));
+    }
+    return false;
+}
+
+/** Search page (#185). Non-friends whose username matches. Empty query returns []. */
+function searchNonFriends(userId, query = "") {
+    const wanted = query.trim().replace(/^@/, "").toLowerCase();
+    if (!wanted) return []; // don't list every user when the box is empty
+    const friendIds = new Set(getFriendsForUser(userId).map((friend) => friend.id));
+    return users
+        .filter((user) => user.id !== userId && !friendIds.has(user.id))
+        .filter((user) => canDiscover(user, friendIds))
+        .filter((user) => user.username.toLowerCase().includes(wanted))
+        .map(toPublicUser)
+        .sort((a, b) => a.name.localeCompare(b.name));
+}
+
 /** Home "Most saved by friends" (#80). */
 function getMostSavedByFriends(userId, limit = 6) {
     const friends = getFriendsForUser(userId);
@@ -131,4 +154,4 @@ function getFriendProfile(viewerId, friendId, recentLimit = 5) {
     };
 }
 
-module.exports = { getFriendsWithSharedCities, filterFriendsByUsername, getMostSavedByFriends, getFriendProfile };
+module.exports = { getFriendsWithSharedCities, filterFriendsByUsername, getMostSavedByFriends, getFriendProfile, searchNonFriends };

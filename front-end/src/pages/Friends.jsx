@@ -3,6 +3,7 @@ import Avatar from '../components/Avatar'
 import { useApi } from '../hooks/useApi'
 import { LoadingState, ErrorState } from '../components/LoadState'
 import { getFriends } from '../api/friends'
+import { searchUsers } from '../api/users'
 import { Link } from 'react-router'
 
 // "Paris" / "Paris, New York" / "No shared lists yet"
@@ -20,6 +21,12 @@ export default function Friends() {
   const wanted = query.trim().replace(/^@/, '').toLowerCase()
   const visibleFriends = friends.filter((friend) => friend.username.toLowerCase().includes(wanted))
   const isSearching = wanted !== ''
+
+  // Non-friends come from the server, re-fetched whenever the query changes
+  const people = useApi(
+    (options) => (wanted ? searchUsers(wanted, options) : Promise.resolve([])),
+    [wanted],
+  )
 
   return (
     <section className="flex flex-col gap-6 p-4">
@@ -78,6 +85,34 @@ export default function Friends() {
           </p>
         )}
       </section>
+
+      {isSearching && (
+        <section aria-labelledby="other-people-heading" className="flex flex-col gap-2">
+          <h2 id="other-people-heading" className="text-lg">Other people</h2>
+
+          {people.loading ? (
+            <LoadingState message="Searching…" />
+          ) : people.error ? (
+            <ErrorState message={people.error.message} onRetry={people.retry} />
+          ) : people.data.length === 0 ? (
+            <p role="status" className="text-sm text-muted">
+              No one else matches "@{query.trim().replace(/^@/, '')}".
+            </p>
+          ) : (
+            <ul aria-label="Other people" className="divide-y divide-border">
+              {people.data.map((person) => (
+                <li key={person.id} className="flex items-center gap-3 py-3">
+                  <Avatar user={person} size="md" />
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate font-semibold">{person.name}</span>
+                    <span className="truncate text-sm text-muted">@{person.username}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
     </section>
   )
 }
