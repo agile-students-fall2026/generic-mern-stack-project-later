@@ -5,7 +5,6 @@ import PlaceConfirmCard from '../components/PlaceConfirmCard'
 import BackLink from '../components/BackLink'
 import { useApi } from '../hooks/useApi'
 import { getPlaceCard, searchPlaces } from '../api/createFlow'
-import './SuggestedMatches.css'
 
 /**
  * Did you mean?
@@ -54,7 +53,7 @@ export default function SuggestedMatches() {
 
   if (!lookup || !cityId) {
     return (
-      <section className="flow-page">
+      <section className="p-4 pb-20">
         <p>Start by pasting a link on the Create screen.</p>
         <Link to="/create">Go to Create</Link>
       </section>
@@ -86,19 +85,19 @@ export default function SuggestedMatches() {
     ?? (candidates ?? []).find((row) => row.placeId === selectedPlaceId)?.name
 
   return (
-    <section className="flow-page">
+    <section className="p-4 pb-20">
       <BackLink to="/create" className="mb-6" />
 
-      <h1 className="flow-title">Close. Which one is it?</h1>
+      <h1 className="mb-4 text-2xl font-bold">Close. Which one is it?</h1>
 
       {keywords.length > 0 && (
         <>
-          <p className="flow-keywords-intro">
+          <p className="mb-3 text-sm leading-[1.4] text-muted">
             We couldn&apos;t pin down one place, but here&apos;s what the post mentioned:
           </p>
-          <ul className="flow-keywords" aria-label="Words from the post">
+          <ul className="mb-4 flex flex-wrap gap-2" aria-label="Words from the post">
             {keywords.map((word) => (
-              <li key={word} className="flow-keyword">
+              <li key={word} className="rounded-input bg-subtle px-2.5 py-1.5 text-sm">
                 &quot;{word}&quot;
               </li>
             ))}
@@ -106,16 +105,16 @@ export default function SuggestedMatches() {
         </>
       )}
 
-      <div className="flow-candidate-list">
+      <div className="mb-4 flex flex-col gap-2">
         {searchText.trim() && search.error ? (
-          <p className="flow-empty" role="alert">
+          <p className="text-sm text-error" role="alert">
             {search.error.message}{' '}
             <button type="button" onClick={search.retry}>Try again</button>
           </p>
         ) : searching ? (
-          <p className="flow-empty">Searching…</p>
+          <p className="text-sm text-muted">Searching…</p>
         ) : listToShow.length === 0 ? (
-          <p className="flow-empty">No matches. Try another search.</p>
+          <p className="text-sm text-muted">No matches. Try another search.</p>
         ) : (
           listToShow.map((row) => (
             <PlaceConfirmCard
@@ -136,7 +135,7 @@ export default function SuggestedMatches() {
 
       <input
         id="place-search"
-        className="input-field flow-search-input"
+        className="input-field mb-4"
         type="search"
         value={searchText}
         onChange={(event) => setSearchText(event.target.value)}
@@ -144,7 +143,7 @@ export default function SuggestedMatches() {
       />
 
       {selectedName && (
-        <div className="flow-selected">
+        <div className="border-t border-border pt-4">
           <p>
             Selected: <strong>{selectedName}</strong>
           </p>
@@ -152,14 +151,14 @@ export default function SuggestedMatches() {
             <DuplicateWarning placeName={selectedName} placeId={selectedPlaceId} />
           )}
           {selectedCard.error && (
-            <p role="alert">
+            <p className="text-sm text-error" role="alert">
               {selectedCard.error.message}{' '}
               <button type="button" onClick={selectedCard.retry}>Try again</button>
             </p>
           )}
           <button
             type="button"
-            className="flow-primary"
+            className="btn-primary hover:btn-primary-hover mb-3 w-full"
             // Wait until the duplicate check comes back, so we don't save twice
             disabled={Boolean(selectedCard.data?.duplicate) || selectedCard.loading}
             onClick={confirmChoice}

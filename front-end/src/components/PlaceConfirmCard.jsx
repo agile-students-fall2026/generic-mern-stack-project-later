@@ -15,9 +15,9 @@ export default function PlaceConfirmCard({
   selectable = false,
 }) {
   const TagRow = (
-    <div className="flow-tags">
+    <div className="flex flex-wrap gap-2">
       {categoryLabel && <CategoryTag categoryId={categoryId} label={categoryLabel} />}
-      {sourceTag && <span className="flow-tag">{sourceTag}</span>}
+      {sourceTag && <span className="bg-subtle px-2 py-1 text-xs">{sourceTag}</span>}
     </div>
   )
 
@@ -26,35 +26,37 @@ export default function PlaceConfirmCard({
     return (
       <button
         type="button"
-        className={`flow-place-row${isSelected ? ' flow-place-row--best' : ''}`}
+        className={`flex w-full items-center gap-3 rounded-input bg-surface p-2 text-left ${
+          isSelected ? 'border-2 border-ink' : 'border border-border'
+        }`}
         onClick={onSelect}
         aria-pressed={isSelected}
       >
-        <span className="flow-thumb flow-thumb--small">
-          <img src={thumbnailUrl} alt="" />
+        <span className="block size-12 shrink-0 overflow-hidden rounded-input bg-border">
+          <img className="size-full object-cover" src={thumbnailUrl} alt="" />
         </span>
-        <span className="flow-place-row-text">
-          <span className="flow-place-name">{name}</span>
-          <span className="flow-place-subtitle">
+        <span className="flex flex-1 flex-col">
+          <span className="mb-1 text-lg font-bold">{name}</span>
+          <span className="mb-2 text-sm text-muted">
             {categoryLabel && <CategoryTag categoryId={categoryId} label={categoryLabel} />}
             {categoryLabel && subtitle && ' · '}
             {subtitle}
           </span>
         </span>
-        {bestMatch && <span className="flow-best-label">Best Match</span>}
+        {bestMatch && <span className="text-xs font-bold">Best Match</span>}
       </button>
     )
   }
 
   // Big card on Place Found
   return (
-    <article className="flow-place-card">
-      <div className="flow-thumb flow-thumb--large">
-        <img src={thumbnailUrl} alt="" />
+    <article className="mb-4 border border-ink">
+      <div className="block h-40 overflow-hidden bg-border">
+        <img className="size-full object-cover" src={thumbnailUrl} alt="" />
       </div>
-      <div className="flow-place-card-body">
-        <h2 className="flow-place-name">{name}</h2>
-        <p className="flow-place-subtitle">{subtitle}</p>
+      <div className="p-3">
+        <h2 className="mb-1 text-lg font-bold">{name}</h2>
+        <p className="mb-2 text-sm text-muted">{subtitle}</p>
         {TagRow}
       </div>
     </article>
