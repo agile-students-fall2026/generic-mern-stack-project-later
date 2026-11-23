@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import TextField from '../components/TextField'
-import { getPlaceDetail, updatePlaceDetails } from '../data/mockDataLayer'
+import { getPlace, updatePlace } from '../api/places'
 import BackLink from '../components/BackLink'
 import { getConfig } from '../api/config'
 import { useApi } from '../hooks/useApi'
@@ -27,20 +27,13 @@ function validateCategory(categoryId, categories) {
 
 export default function EditPlace() {
   const { placeId } = useParams()
-  const navigate = useNavigate()
-  const place = useMemo(() => getPlaceDetail(placeId), [placeId])
+  const placeRequest = useApi((options) => getPlace(placeId, options), [placeId])
   // Categories come from the server (GET /api/config), not demoData
   const config = useApi(getConfig)
 
-  // The form starts out filled with what we already know about the place
-  const [name, setName] = useState(place?.name ?? '')
-  const [categoryId, setCategoryId] = useState(place?.categoryId ?? '')
-  const [location, setLocation] = useState(place?.neighborhood ?? '')
-  const [touched, setTouched] = useState({ name: false, category: false, location: false })
-  // An error that comes from saving, not from a single field
-  const [formError, setFormError] = useState('')
+  if (placeRequest.loading || config.loading) return <LoadingState message="Loading place…" />
 
-  if (!place) {
+  if (placeRequest.error?.status === 404) {
     return (
       <section className="px-5 py-10 text-center">
         <h1 className="text-2xl font-semibold">Place not found</h1>
@@ -50,27 +43,52 @@ export default function EditPlace() {
     )
   }
 
-  if (config.loading) return <LoadingState message="Loading categories…" />
-  if (config.error) return <ErrorState message={config.error.message} onRetry={config.retry} />
+  const failed = placeRequest.error || config.error
+  if (failed) {
+    const retry = () => {
+      if (placeRequest.error) placeRequest.retry()
+      if (config.error) config.retry()
+    }
+    return <ErrorState message={failed.message} onRetry={retry} />
+  }
 
-  const categories = config.data.categories
+  // The form only mounts once the place is loaded, so its fields can start filled in
+  return <EditPlaceForm place={placeRequest.data} categories={config.data.categories} />
+}
+
+function EditPlaceForm({ place, categories }) {
+  const navigate = useNavigate()
+
+  // The form starts out filled with what we already know about the place
+  const [name, setName] = useState(place.name)
+  const [categoryId, setCategoryId] = useState(place.categoryId)
+  const [location, setLocation] = useState(place.neighborhood)
+  const [touched, setTouched] = useState({ name: false, category: false, location: false })
+  // An error that comes from saving, not from a single field
+  const [formError, setFormError] = useState('')
+  const [saving, setSaving] = useState(false)
 
   const nameError = touched.name ? validateName(name) : ''
   const categoryError = touched.category ? validateCategory(categoryId, categories) : ''
   const locationError = touched.location ? validateLocation(location) : ''
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
     // Show every error at once, even for fields the user never clicked into
     setTouched({ name: true, category: true, location: true })
     if (validateName(name) || validateCategory(categoryId, categories) || validateLocation(location)) return
-    const result = updatePlaceDetails(place.id, { name, categoryId, neighborhood: location })
-    if (!result.ok) {
-      setFormError(result.error)
-      return
+
+    setSaving(true)
+    setFormError('')
+    try {
+      await updatePlace(place.id, { name, categoryId, neighborhood: location })
+      // Saving takes the user back to the place they were looking at
+      navigate(`/place/${place.id}`)
+    } catch (err) {
+      // The server's { error } message, or "Can't reach the server..."
+      setFormError(err.message)
+      setSaving(false)
     }
-    // Saving takes the user back to the place they were looking at
-    navigate(`/place/${place.id}`)
   }
 
   return (
@@ -129,9 +147,10 @@ export default function EditPlace() {
 
         <button
           type="submit"
+          disabled={saving}
           className="mt-2 min-h-11 btn-primary hover:btn-primary-hover focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-brand"
         >
-          Save changes
+          {saving ? 'Saving…' : 'Save changes'}
         </button>
       </form>
     </section>
