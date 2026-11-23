@@ -48,4 +48,20 @@ function changePassword({ currentPassword, newPassword, userId = currentUserId }
   return { ok: true };
 }
 
-module.exports = { changePassword };
+/** Same rules as Signup.jsx. making sure username is valid */
+function validateUsername(username) {
+  const value = String(username || "").trim().toLowerCase();
+  if (!value) return "Pick a username.";
+  if (value.length < 3) return "Use at least 3 characters.";
+  if (!/^[a-z0-9_]+$/.test(value)) return "Use only letters, numbers, and underscores.";
+  return "";
+}
+
+/** Case-insensitive check against the mock users. To ensure username is not already taken. */
+function isUsernameAvailable(username) {
+  const wanted = String(username).trim().toLowerCase();
+  return !users.some((user) => user.username.toLowerCase() === wanted);
+}
+
+module.exports = { changePassword, validateNewPassword, validateUsername, isUsernameAvailable };
+
