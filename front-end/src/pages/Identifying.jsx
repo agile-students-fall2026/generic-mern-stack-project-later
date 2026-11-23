@@ -50,6 +50,11 @@ export default function Identifying() {
       <section className="p-4 pb-20">
         <BackLink to="/create" className="mb-6" />
         <ErrorState message={cardRequest.error.message} onRetry={cardRequest.retry} />
+        {location.state?.manualSearch && (
+          <Link to="/create/search" state={location.state} className="inline-flex min-h-11 items-center font-semibold text-brand underline">
+            Search for another place
+          </Link>
+        )}
       </section>
     )
   }
@@ -76,6 +81,10 @@ export default function Identifying() {
     }
   }
   function handleNotIt() {
+    if (location.state?.manualSearch) {
+      navigate('/create/search', { state: location.state })
+      return
+    }
     // Same link, but let the user pick another place in this city.
     // candidates came from the lookup response and are passed along again.
     navigate('/create/matches', {

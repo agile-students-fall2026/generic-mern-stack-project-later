@@ -2,6 +2,22 @@ const { expect } = require("chai");
 const { request } = require("chai-http");
 const app = require("../app");
 
+describe("GET /api/cities", function () {
+  it("offers searchable cities even when the current user has not joined a list there", async function () {
+    const response = await request.execute(app).get("/api/cities");
+    expect(response.status).to.equal(200);
+    expect(response.body).to.deep.equal([
+      { id: "c_nyc", name: "New York", country: "United States" },
+      { id: "c_paris", name: "Paris", country: "France" },
+    ]);
+    for (const city of response.body) {
+      const search = await request.execute(app).get(`/api/cities/${city.id}/search?q=food`);
+      expect(search.status).to.equal(200);
+      expect(search.body).not.to.be.empty;
+    }
+  });
+});
+
 describe("POST /api/links/lookup", function () {
   it("returns the found place, and adds candidates plus cityId", async function () {
     const response = await request

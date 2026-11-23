@@ -1,5 +1,9 @@
 import { api } from './client.js'
 
+export function getSearchCities(options) {
+  return api.get('/api/cities', options)
+}
+
 // POST /api/links/lookup
 // Body is { url }. 
 // The JSON is { status: "empty" | "not_found" | "ok", lookup?, candidates?, cityId? }.
