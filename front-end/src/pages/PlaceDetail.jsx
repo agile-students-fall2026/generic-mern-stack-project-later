@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 import VoteChips from '../components/VoteChips'
 import BackLink from '../components/BackLink'
-import { castVote, getPlaceDetail, getPlaceVotes } from '../data/mockDataLayer'
+import { castVote, getPlace, getPlaceVotes } from '../api/places'
+import { useApi } from '../hooks/useApi'
+import { LoadingState, ErrorState } from '../components/LoadState'
 
 // Just the first name, so "Samantha Chen" reads as "Samantha"
 function firstName(fullName) {
@@ -17,12 +19,28 @@ function mapsUrl({ coordinates, name }) {
 
 export default function PlaceDetail() {
   const { placeId } = useParams()
-  const place = useMemo(() => getPlaceDetail(placeId), [placeId])
+  const placeRequest = useApi((options) => getPlace(placeId, options), [placeId])
+  const place = placeRequest.data
+  const savedPlaceId = place?.savedPlaceId ?? null
+  // Places that aren't on a list have no votes, so skip the request
+  const votesRequest = useApi(
+    (options) => (savedPlaceId ? getPlaceVotes(savedPlaceId, options) : Promise.resolve(null)),
+    [savedPlaceId],
+  )
   // If the photo link is broken we fall back to the plain peach block behind it
   const [photoFailed, setPhotoFailed] = useState(false)
-  // Latest result from castVote. Only used while it still belongs to this place.
-  const [voteResult, setVoteResult] = useState(null)
   const [voteError, setVoteError] = useState('')
+  // True while a vote is being saved, so a second tap can't send another one
+  const [voting, setVoting] = useState(false)
+
+  if (placeRequest.loading) return <LoadingState message="Loading place…" />
+
+  // 404 means the link doesn't match any place. Anything else gets a retry.
+  if (placeRequest.error && placeRequest.error.status !== 404) {
+    return <ErrorState message={placeRequest.error.message} onRetry={placeRequest.retry} />
+  }
+
+  // The link in the URL doesn't match any place we know about
 
   // The link in the URL doesn't match any place we know about
   if (!place) {
@@ -38,17 +56,19 @@ export default function PlaceDetail() {
   }
 
   // Read the tally fresh on every render, unless we just voted on this place
-  const voteState = voteResult?.savedPlaceId === place.savedPlaceId
-    ? voteResult
-    : getPlaceVotes(place.savedPlaceId)
+  const voteState = votesRequest.data
 
-  function handleVote(value) {
-    const result = castVote(place.savedPlaceId, value)
-    if (result.ok) {
-      setVoteResult(result)
+  async function handleVote(value) {
+    setVoting(true)
+    try {
+      // The server sends back the new tally, so swap it in without refetching
+      const result = await castVote(place.savedPlaceId, value)
+      votesRequest.setData(result)
       setVoteError('')
-    } else {
-      setVoteError(result.error)
+    } catch (err) {
+      setVoteError(err.message)
+    } finally {
+      setVoting(false)
     }
   }
 
@@ -102,13 +122,22 @@ export default function PlaceDetail() {
           </a>
         </div>
 
+        {votesRequest.error && (
+          <p className="mt-8 text-sm text-red-600" role="alert">
+            Couldn't load votes.{' '}
+            <button type="button" className="font-semibold underline" onClick={votesRequest.retry}>
+              Try again
+            </button>
+          </p>
+        )}
+
         {/* Places that aren't saved to a list yet have nothing to vote on */}
         {voteState && (
           <section className="mt-8" aria-label="Votes">
             <VoteChips
               value={voteState.myVote}
               counts={voteState.counts}
-              disabled={!voteState.canVote}
+              disabled={!voteState.canVote || voting}
               onChange={handleVote}
             />
             <p className="mt-2 text-sm text-muted" role="status">
