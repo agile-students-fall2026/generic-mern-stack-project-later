@@ -16,6 +16,7 @@ const inviteRoutes = require("./routes/inviteRoutes");
 const savedPlacesRoutes = require("./routes/savedPlacesRoutes");
 const createFlowRoutes = require("./routes/createFlowRoutes");
 const cityListRoutes = require("./routes/cityListRoutes");
+const placeRoutes = require("./routes/placeRoutes");
 const listMemberRoutes = require("./routes/listMemberRoutes");
 
 const app = express();
@@ -46,6 +47,7 @@ app.use("/api", inviteRoutes);
 app.use("/api", savedPlacesRoutes);
 app.use("/api", createFlowRoutes);
 app.use("/api", cityListRoutes);
+app.use("/api", placeRoutes);
 app.use("/api", listMemberRoutes);
 
 // --- 404 for anything else ---
