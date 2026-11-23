@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import TextField from '../components/TextField'
-import './Signup.css'
 import Button from '../components/Button'
 
 //TEMPORARY. TESTING BEFORE BACKEND DONE
@@ -69,16 +68,20 @@ export default function Signup() {
   }
 
     return (
-    <main className="signup-page">
+    <main className="mx-auto flex min-h-screen w-full max-w-[27.5rem] flex-col bg-background px-5 py-10 text-ink">
       
-      <h1 className="signup-logo">Later?</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Later?</h1>
 
-      <section className="signup-intro">
-        <h2 className="signup-title">Stop losing places in the group chat.</h2>
-        <p className="signup-subtitle">Pick a username so friends can find you.</p>
+      <section className="mt-12">
+        <h2 className="text-3xl leading-tight font-bold tracking-tight">
+          Stop losing places in the group chat.
+        </h2>
+        <p className="mt-2 text-sm leading-normal text-muted">
+          Pick a username so friends can find you.
+        </p>
       </section>
 
-      <form onSubmit={handleSubmit} noValidate className="signup-form">
+      <form onSubmit={handleSubmit} noValidate className="mt-6 flex flex-col gap-4">
         <TextField
           label="Username"
           value={username}
@@ -107,14 +110,14 @@ export default function Signup() {
           hint="At least 8 characters, including a number."
           autoComplete="new-password"
         />
-        <Button type="submit" className="signup-submit">
+        <Button type="submit" className="mt-2 w-full">
           Create account
         </Button>
       </form>
 
-      <p className="signup-footer">
+      <p className="mt-6 text-center text-sm text-ink">
         Already have an account?{' '}
-        <Link to="/login" className="signup-link">
+        <Link to="/login" className="font-bold text-brand hover:text-brand-dark">
           Log in
         </Link>
       </p>

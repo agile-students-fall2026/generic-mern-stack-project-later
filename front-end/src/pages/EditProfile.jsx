@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router'
 import Avatar from '../components/Avatar'
 import TextField from '../components/TextField'
-import { currentUserId } from '../data/demoData'
-import { getUserProfile, isUsernameTaken, updateUserProfile } from '../data/mockDataLayer'
+import { getMyProfile, updateMyProfile } from '../api/users'
+import { useApi } from '../hooks/useApi'
 import BackLink from '../components/BackLink'
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024
@@ -20,33 +20,57 @@ function validateUsername(username) {
   if (username.length > 20) return 'Use 20 characters or fewer.'
   // Letters, numbers, underscores and dots only. No spaces.
   if (!/^[a-z0-9_.]+$/.test(username)) return 'Use only letters, numbers, dots and underscores.'
-  if (isUsernameTaken(username, currentUserId)) return 'That username is taken.'
   return ''
 }
 
+function readPhoto(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = () => reject(new Error('Could not read that photo. Please select it again.'))
+    reader.readAsDataURL(file)
+  })
+}
+
 export default function EditProfile() {
-  const navigate = useNavigate()
-  const profile = useMemo(() => getUserProfile(currentUserId), [])
+  const { data: profile, loading, error, retry } = useApi(getMyProfile)
 
-  const [name, setName] = useState(profile?.name ?? '')
-  const [username, setUsername] = useState(profile?.username ?? '')
-  // The picture shown in the preview. Starts as the current photo.
-  const [photoUrl, setPhotoUrl] = useState(profile?.photoUrl ?? '')
-  const [photoChanged, setPhotoChanged] = useState(false)
-  const [photoError, setPhotoError] = useState('')
-  const [touched, setTouched] = useState({ name: false, username: false })
-  const [formError, setFormError] = useState('')
+  if (loading) {
+    return <p role="status" className="px-5 py-10 text-center">Loading your profile…</p>
+  }
 
-  if (!profile) {
+  if (error || !profile) {
     return (
       <section className="px-5 py-10 text-center">
         <h1 className="text-2xl font-semibold">We couldn’t load your profile</h1>
-        <Link to="/login" className="mt-4 inline-block font-semibold text-brand hover:text-brand-dark">
-          Log in again
-        </Link>
+        <p role="alert" className="mt-2 text-sm text-muted">
+          {error?.message || 'Your profile is unavailable.'}
+        </p>
+        <button type="button" onClick={retry} className="btn-secondary mt-4">
+          Try again
+        </button>
       </section>
     )
   }
+
+  return <EditProfileForm profile={profile} />
+}
+
+function EditProfileForm({ profile }) {
+  const navigate = useNavigate()
+  const [name, setName] = useState(profile.name)
+  const [username, setUsername] = useState(profile.username)
+  const [photoUrl, setPhotoUrl] = useState(profile.photoUrl)
+  const [photoFile, setPhotoFile] = useState(null)
+  const [photoError, setPhotoError] = useState('')
+  const [touched, setTouched] = useState({ name: false, username: false })
+  const [formError, setFormError] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (!photoFile) return
+    return () => URL.revokeObjectURL(photoUrl)
+  }, [photoFile, photoUrl])
 
   const nameError = touched.name ? validateName(name) : ''
   const usernameError = touched.username ? validateUsername(username) : ''
@@ -69,27 +93,28 @@ export default function EditProfile() {
       return
     }
 
-    // We don't revoke this link on purpose: the Profile screen needs it after we leave this page
     setPhotoUrl(URL.createObjectURL(file))
-    setPhotoChanged(true)
+    setPhotoFile(file)
     setPhotoError('')
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
+    if (saving) return
     setTouched({ name: true, username: true })
-    if (validateName(name) || validateUsername(username)) return
+    setFormError('')
+    if (validateName(name) || validateUsername(username) || photoError) return
 
-    const result = updateUserProfile(profile.id, {
-      name,
-      username,
-      photoUrl: photoChanged ? photoUrl : '',
-    })
-    if (!result.ok) {
-      setFormError(result.error)
-      return
+    setSaving(true)
+    try {
+      const fields = { name: name.trim(), username: username.trim() }
+      if (photoFile) fields.photoUrl = await readPhoto(photoFile)
+      await updateMyProfile(fields)
+      navigate('/profile')
+    } catch (error) {
+      setFormError(error.message || 'Could not save your changes. Please try again.')
+      setSaving(false)
     }
-    navigate('/profile')
   }
 
   return (
@@ -138,9 +163,10 @@ export default function EditProfile() {
 
         <button
           type="submit"
+          disabled={saving}
           className="mt-2 min-h-11 btn-primary hover:btn-primary-hover focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-brand"
         >
-          Save changes
+          {saving ? 'Saving…' : 'Save changes'}
         </button>
       </form>
     </section>
