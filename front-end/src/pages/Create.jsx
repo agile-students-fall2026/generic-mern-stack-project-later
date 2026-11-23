@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { lookupLink } from '../api/createFlow'
-import './Create.css'
 import BackLink from '../components/BackLink'
 
 export default function Create() {
@@ -70,21 +69,21 @@ export default function Create() {
   }
 
   return (
-    <section className="add-place">
+    <section className="p-4 pb-20">
       {/* Back: goes to Home */}
       <BackLink to="/" label="Back to home" className="mb-6" />
-      <h1 className="add-place-title">
+      <h1 className="mb-4 text-[1.75rem] leading-[1.2] font-bold">
         Saw a place?
         <br />
         Drop the link.
       </h1>
-      <p className="add-place-hint">
+      <p className="mb-6 leading-[1.4]">
         Paste a link from TikTok or Instagram. We find the place and pin it to the right city.
       </p>
-      <form className="add-place-form" onSubmit={handleSubmit}>
-        <div className="add-place-input-wrap">
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+        <div className="flex items-center rounded-input border border-border bg-surface pr-1">
           <input
-            className="input-field"
+            className="min-w-0 flex-1 bg-transparent px-4 py-3 text-ink focus:outline-none"
             type="url"
             name="link"
             value={link}
@@ -101,7 +100,7 @@ export default function Create() {
           {link.length > 0 && (
             <button
               type="button"
-              className="add-place-clear"
+              className="shrink-0 px-2 py-1 text-xl leading-none"
               aria-label="Clear link"
               onClick={clearLink}
               disabled={finding}
@@ -111,7 +110,7 @@ export default function Create() {
           )}
         </div>
         {error && (
-          <p className="add-place-error" role="alert">
+          <p className="text-sm text-error" role="alert">
             {error}
           </p>
         )}

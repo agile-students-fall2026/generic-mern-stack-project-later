@@ -17,6 +17,18 @@ It includes cities without a joined list because the save endpoint can create
 that user's first list in a city. A lookup failure supplies no city, so the UI
 asks the user to choose one instead of inferring a location from the link.
 
+Search and confirmation use the shared API fields `categoryId`, `categoryLabel`,
+and `neighborhood` introduced with the category badge integration. Search rows
+retain `placeId` as their selection/save identifier; `savedPlaceId` is the
+separate identifier used by the voting API. Search results and confirmation use
+the same `CategoryTag` component and preserve the create flow's Tailwind styles.
+
+The latest master includes the profile, incoming invitation, member and place
+APIs. The member screen continues using `data.ownerId` and `data.currentUserId`
+from the server. CityPage/MapTab still read local mock data pending #162, and
+PlaceDetail/EditPlace still need their separate API wiring; a successful save
+does not establish that those screens already reflect server-side changes.
+
 This searches the Sprint 2 server's mock places, not live TikTok/Instagram posts
 or a third-party places service. An unknown URL is preserved without inventing a
 lookup ID. Known TikTok/Instagram domains supply the source platform for saving.
@@ -34,3 +46,9 @@ The existing in-memory backend resets saved places when restarted.
 8. Open `/create/search` without navigation state; it should offer **Go to Create**.
 
 Automated coverage: `npm test` in `front-end`, `npm run coverage` in `back-end`.
+
+Integrated verification on November 22: 94 backend tests, 54 frontend tests,
+97.85% backend line coverage, and the frontend production build pass. The
+browser flow above was verified against the merged team PRs. Full lint still
+reports the two existing `react-hooks/set-state-in-effect` errors in `useApi.js`
+and `SuggestedMatches.jsx`, also reproduced on master without this PR.

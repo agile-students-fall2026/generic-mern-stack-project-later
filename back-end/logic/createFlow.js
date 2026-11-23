@@ -114,7 +114,9 @@ function getPlaceCardData(placeId, lookup) {
     placeId: place.id,
     name: place.name,
     subtitle: `${categoryLabel} - ${place.neighborhood}`,
+    categoryId: place.categoryId,
     categoryLabel,
+    neighborhood: place.neighborhood,
     cityId: place.cityId,
     cityName: city ? city.name : "",
     thumbnailUrl: (lookup && lookup.thumbnailUrl) || place.photoUrl,
@@ -150,6 +152,9 @@ function getAmbiguousCandidates(lookup) {
         placeId: place.id,
         name: place.name,
         subtitle: `${getCategoryLabel(place.categoryId)} - ${place.neighborhood}`,
+        categoryId: place.categoryId,
+        categoryLabel: getCategoryLabel(place.categoryId),
+        neighborhood: place.neighborhood,
         photoUrl: place.photoUrl,
         bestMatch: candidate.bestMatch === true,
       };
@@ -214,7 +219,7 @@ function findLinkLookupById(lookupId) {
 
 /**
  * Same array as searchPlacesInCity(). An empty or blank query returns [].
- * Each row: { placeId, name, subtitle, photoUrl, bestMatch: false }.
+ * Each row includes categoryId, categoryLabel and neighborhood for shared badges.
  */
 function searchPlacesInCity(cityId, query) {
   const q = String(query || "").trim().toLowerCase();
@@ -234,6 +239,9 @@ function searchPlacesInCity(cityId, query) {
       placeId: place.id,
       name: place.name,
       subtitle: `${getCategoryLabel(place.categoryId)} - ${place.neighborhood}`,
+      categoryId: place.categoryId,
+      categoryLabel: getCategoryLabel(place.categoryId),
+      neighborhood: place.neighborhood,
       photoUrl: place.photoUrl,
       bestMatch: false,
     }));

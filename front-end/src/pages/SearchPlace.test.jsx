@@ -9,8 +9,8 @@ import SaveSuccess from './SaveSuccess'
 
 const sourceUrl = 'https://www.tiktok.com/@travel/video/unmatched'
 const cities = [{ id: 'city_server', name: 'Server City', country: 'Test Country' }, { id: 'city_other', name: 'Other City', country: 'Test Country' }]
-const result = { placeId: 'place_server', name: 'Server Cafe', subtitle: 'Food - Riverside', photoUrl: '' }
-const card = { placeId: result.placeId, name: result.name, subtitle: result.subtitle, categoryLabel: 'Food', cityId: 'city_server', cityName: 'Server City', duplicate: null, sharingMessage: 'Goes into your Server City list.' }
+const result = { placeId: 'place_server', name: 'Server Cafe', subtitle: 'Food - Riverside', categoryId: 'food', categoryLabel: 'Food', neighborhood: 'Riverside', photoUrl: '' }
+const card = { ...result, cityId: 'city_server', cityName: 'Server City', duplicate: null, sharingMessage: 'Goes into your Server City list.' }
 const json = (data, status = 200) => new Response(JSON.stringify(data), { status })
 
 function renderFlow(path = '/create/search', state = { sourceUrl }) {
@@ -64,8 +64,13 @@ describe('Manual place search', () => {
     await screen.findByRole('option', { name: 'Server City, Test Country' })
     expect(screen.getByRole('combobox').value).toBe('')
     searchFor('Cafe & tea')
-    fireEvent.click(await screen.findByRole('button', { name: /Server Cafe/ }))
+    const resultButton = await screen.findByRole('button', { name: /Server Cafe/ })
+    expect(screen.getByText('Food').className).toContain('bg-peach')
+    expect(screen.getByText('Riverside')).toBeTruthy()
+    fireEvent.click(resultButton)
     await screen.findByRole('heading', { name: 'Is this the place?' })
+    expect(screen.getByText('Food').className).toContain('bg-peach')
+    expect(screen.getByText('Riverside')).toBeTruthy()
     expect(fetch.mock.calls.some(([url]) => url.endsWith('/api/saved-places'))).toBe(false)
     const searchCall = fetch.mock.calls.find(([url]) => url.includes('/search?'))
     expect(new URL(searchCall[0]).pathname).toBe('/api/cities/city_server/search')

@@ -6,7 +6,7 @@ import { Link } from 'react-router'
  */
 export default function DuplicateWarning({ placeName, placeId }) {
   return (
-    <p className="flow-duplicate" role="status">
+    <p className="mb-4 border border-warning-border bg-warning p-3 text-sm" role="status">
       {placeName} is already on this list.{' '}
       <Link to={`/place/${placeId}`}>View existing place</Link>
     </p>

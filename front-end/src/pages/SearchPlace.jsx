@@ -4,6 +4,7 @@ import { getSearchCities, searchPlaces } from '../api/createFlow'
 import { useApi } from '../hooks/useApi'
 import TextField from '../components/TextField'
 import Button from '../components/Button'
+import CategoryTag from '../components/CategoryTag'
 import { ErrorState, LoadingState } from '../components/LoadState'
 
 export default function SearchPlace() {
@@ -106,7 +107,10 @@ function PlaceSearch({ context, sourceUrl }) {
                       <ResultPhoto key={place.photoUrl} photoUrl={place.photoUrl} />
                       <span className="min-w-0 flex-1">
                         <span className="block font-semibold">{place.name}</span>
-                        <span className="mt-1 block text-sm font-normal text-muted">{place.subtitle}</span>
+                        <span className="mt-1 flex flex-wrap items-center gap-2 text-sm font-normal text-muted">
+                          {place.categoryLabel && <CategoryTag categoryId={place.categoryId} label={place.categoryLabel} />}
+                          <span>{place.neighborhood ?? place.subtitle}</span>
+                        </span>
                       </span>
                       <span aria-hidden="true">→</span>
                     </Button>

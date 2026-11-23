@@ -12,15 +12,18 @@ const { stripPasswordsMiddleware } = require("./utils/stripPasswords");
 const configRoutes = require("./routes/configRoutes");
 const friendRoutes = require("./routes/friendRoutes");
 const usersRoutes = require("./routes/usersRoutes");
+const inviteRoutes = require("./routes/inviteRoutes");
 const savedPlacesRoutes = require("./routes/savedPlacesRoutes");
 const createFlowRoutes = require("./routes/createFlowRoutes");
 const cityListRoutes = require("./routes/cityListRoutes");
+const placeRoutes = require("./routes/placeRoutes");
 const listMemberRoutes = require("./routes/listMemberRoutes");
 
 const app = express();
 
 // --- Middleware ---
 app.use(cors());
+app.patch("/api/users/me", express.json({ limit: "7mb" }));
 app.use(express.json());
 app.use(stripPasswordsMiddleware);
 app.use("/api", authRoutes);
@@ -40,9 +43,11 @@ app.get("/", (req, res) => {
 app.use("/api", configRoutes);
 app.use("/api", friendRoutes);
 app.use("/api", usersRoutes);
+app.use("/api", inviteRoutes);
 app.use("/api", savedPlacesRoutes);
 app.use("/api", createFlowRoutes);
 app.use("/api", cityListRoutes);
+app.use("/api", placeRoutes);
 app.use("/api", listMemberRoutes);
 
 // --- 404 for anything else ---

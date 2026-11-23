@@ -48,6 +48,9 @@ describe("POST /api/links/lookup", function () {
     expect(response.body.candidates[0]).to.include({
       placeId: "p_11",
       name: "Boulangerie Utopie",
+      categoryId: "food",
+      categoryLabel: "Food",
+      neighborhood: "Haut-Marais",
       bestMatch: true,
     });
   });
@@ -91,6 +94,9 @@ describe("GET /api/places/:id/card", function () {
       placeId: "p_10",
       name: "Septime",
       subtitle: "Food - Bastille",
+      categoryId: "food",
+      categoryLabel: "Food",
+      neighborhood: "Bastille",
       cityId: "c_paris",
       cityName: "Paris",
       sourceTag: null,
@@ -134,6 +140,9 @@ describe("GET /api/cities/:id/search", function () {
         placeId: "p_10",
         name: "Septime",
         subtitle: "Food - Bastille",
+        categoryId: "food",
+        categoryLabel: "Food",
+        neighborhood: "Bastille",
         photoUrl: "https://picsum.photos/seed/p10/400",
         bestMatch: false,
       },
