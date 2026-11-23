@@ -1,3 +1,4 @@
+import CategoryTag from './CategoryTag.jsx'
 /**
  * Place preview card used on Place Found and Did you mean rows.
  */
@@ -5,6 +6,7 @@ export default function PlaceConfirmCard({
   thumbnailUrl,
   name,
   subtitle,
+  categoryId,
   categoryLabel,
   sourceTag,
   bestMatch = false,
@@ -14,7 +16,7 @@ export default function PlaceConfirmCard({
 }) {
   const TagRow = (
     <div className="flex flex-wrap gap-2">
-      {categoryLabel && <span className="bg-subtle px-2 py-1 text-xs">{categoryLabel}</span>}
+      {categoryLabel && <CategoryTag categoryId={categoryId} label={categoryLabel} />}
       {sourceTag && <span className="bg-subtle px-2 py-1 text-xs">{sourceTag}</span>}
     </div>
   )
@@ -35,7 +37,11 @@ export default function PlaceConfirmCard({
         </span>
         <span className="flex flex-1 flex-col">
           <span className="mb-1 text-lg font-bold">{name}</span>
-          <span className="mb-2 text-sm text-muted">{subtitle}</span>
+          <span className="mb-2 text-sm text-muted">
+            {categoryLabel && <CategoryTag categoryId={categoryId} label={categoryLabel} />}
+            {categoryLabel && subtitle && ' · '}
+            {subtitle}
+          </span>
         </span>
         {bestMatch && <span className="text-xs font-bold">Best Match</span>}
       </button>

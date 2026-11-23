@@ -95,7 +95,8 @@ export default function Identifying() {
       <PlaceConfirmCard
         thumbnailUrl={card.thumbnailUrl}
         name={card.name}
-        subtitle={card.subtitle}
+        subtitle={card.neighborhood}
+        categoryId={card.categoryId}
         categoryLabel={card.categoryLabel}
         sourceTag={card.sourceTag}
       />

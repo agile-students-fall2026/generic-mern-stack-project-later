@@ -1,3 +1,4 @@
+import Badge from '../components/Badge.jsx'
 import { Link, useParams } from 'react-router'
 import Avatar from '../components/Avatar'
 import { getListMembersData } from '../api/listMembers'
@@ -58,7 +59,7 @@ function MembersList({ cityId }) {
               <p className="truncate text-sm text-muted">@{member.username}</p>
             </div>
             {member.id === data.ownerId && (
-              <span className="rounded-pill bg-sage px-3 py-1 text-xs font-semibold text-ink">Owner</span>
+              <Badge className="bg-sage px-3 py-1 font-semibold">Owner</Badge>
             )}
           </li>
         ))}
