@@ -10,15 +10,17 @@ export function useApi(load, deps = []) {
 
   useEffect(() => {
     const controller = new AbortController()
-    Promise.resolve().then(() => load({ signal: controller.signal }))
-      .then((data) => {
+    async function fetchData() {
+      try {
+        const data = await load({ signal: controller.signal })
         if (!controller.signal.aborted) setResult({ data, error: null, deps, reloadKey })
-      })
-      .catch((error) => {
+      } catch (error) {
         if (error.name !== 'AbortError' && !controller.signal.aborted) {
           setResult({ data: null, error, deps, reloadKey })
         }
-      })
+      }
+    }
+    fetchData()
     return () => controller.abort()
   }, [...deps, reloadKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
