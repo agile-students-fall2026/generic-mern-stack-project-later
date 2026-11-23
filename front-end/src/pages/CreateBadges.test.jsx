@@ -33,3 +33,19 @@ it('shows the category badge and neighborhood supplied with API candidates', asy
   expect(await screen.findByRole('button', { name: /Septime.*Food.*Bastille/ })).toBeTruthy()
   expect(screen.getByText('Food').className).toContain('bg-peach')
 })
+
+it('recovers when the matches route is opened without a lookup', async () => {
+  const fetchMock = vi.fn()
+  vi.stubGlobal('fetch', fetchMock)
+  render(<MemoryRouter initialEntries={['/create/matches']}><SuggestedMatches /></MemoryRouter>)
+  expect(await screen.findByRole('link', { name: 'Go to Create' })).toBeTruthy()
+  expect(fetchMock).not.toHaveBeenCalled()
+})
+
+it('does not allow a candidate to continue when its duplicate check fails', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: 'Check unavailable' }), { status: 503 })))
+  const state = { lookup, cityId: 'c_paris', candidates: [{ ...card, bestMatch: true }] }
+  render(<MemoryRouter initialEntries={[{ pathname: '/create/matches', state }]}><SuggestedMatches /></MemoryRouter>)
+  expect(await screen.findByRole('alert')).toHaveProperty('textContent', 'Check unavailable Try again')
+  expect(screen.getByRole('button', { name: 'Use this place' }).disabled).toBe(true)
+})

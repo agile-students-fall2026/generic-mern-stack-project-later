@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import DuplicateWarning from '../components/DuplicateWarning'
 import PlaceConfirmCard from '../components/PlaceConfirmCard'
@@ -22,16 +22,12 @@ export default function SuggestedMatches() {
   const candidates = location.state?.candidates
 
   const [searchText, setSearchText] = useState('')
-  const [selectedPlaceId, setSelectedPlaceId] = useState(null)
+  const [selection, setSelection] = useState(null)
+  const selectedPlaceId = selection && selection.candidates === candidates
+    ? selection.placeId
+    : candidates?.find((row) => row.bestMatch)?.placeId ?? candidates?.[0]?.placeId ?? null
 
   const keywords = lookup?.keywords ?? []
-
-  // Pre-select Best Match when the candidate list arrives
-  useEffect(() => {
-    const rows = candidates ?? []
-    const best = rows.find((row) => row.bestMatch)
-    setSelectedPlaceId(best?.placeId ?? rows[0]?.placeId ?? null)
-  }, [candidates])
 
   // Empty box: do not search. The candidate list stays on screen.
   const search = useApi(
@@ -61,11 +57,11 @@ export default function SuggestedMatches() {
   }
 
   function choosePlace(placeId) {
-    setSelectedPlaceId(placeId)
+    setSelection({ candidates, placeId })
   }
 
   function confirmChoice() {
-    if (!selectedPlaceId || selectedCard.data?.duplicate) return
+    if (!selectedPlaceId || !selectedCard.data || selectedCard.error || selectedCard.data.duplicate) return
     navigate('/create/identifying', {
       state: {
         lookup,
@@ -77,7 +73,7 @@ export default function SuggestedMatches() {
   }
 
   const searching = Boolean(searchText.trim()) && search.loading
-  // While searching, keep the previous results instead of flashing "No matches".
+  // The loading branch keeps a new search from flashing "No matches".
   const listToShow = searchText.trim() ? (search.data ?? []) : (candidates ?? [])
 
   const selectedName = selectedCard.data?.name
@@ -160,7 +156,7 @@ export default function SuggestedMatches() {
             type="button"
             className="btn-primary hover:btn-primary-hover mb-3 w-full"
             // Wait until the duplicate check comes back, so we don't save twice
-            disabled={Boolean(selectedCard.data?.duplicate) || selectedCard.loading}
+            disabled={!selectedCard.data || Boolean(selectedCard.data.duplicate) || Boolean(selectedCard.error) || selectedCard.loading}
             onClick={confirmChoice}
           >
             Use this place

@@ -124,8 +124,8 @@ export default function Login() {
         </div>
 
         {/* Login button */}
-        <Button type="submit" className="mt-4 w-full">
-          Log in
+        <Button type="submit" className="mt-4 w-full" disabled={submitting}>
+          {submitting ? 'Logging in…' : 'Log in'}
         </Button>
       </form>
 
