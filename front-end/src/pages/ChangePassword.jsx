@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
+import { resetPassword } from '../api/auth'
 
 import TextField from '../components/TextField'
 import Button from '../components/Button'
@@ -30,20 +31,27 @@ export default function ChangePassword() {
     const passwordError = touched.password ? validatePassword(password) : ''
     const confirmError = touched.confirm ? validateConfirm(password, confirm) : ''
 
-    function handleSubmit(event) {
-        // Keeps the browser from reloading the page
-        event.preventDefault()
+    // The server's message if the request fails
+    const [formError, setFormError] = useState('')
+    
+    async function handleSubmit(event) {
+    // Keeps the browser from reloading the page
+    event.preventDefault()
+    setFormError('')
 
-        // Count both fields as touched so skipped ones show their errors too
-        setTouched({ password: true, confirm: true })
+    // Count both fields as touched so skipped ones show their errors too
+    setTouched({ password: true, confirm: true })
 
-        if (validatePassword(password) || validateConfirm(password, confirm)) return
+    if (validatePassword(password) || validateConfirm(password, confirm)) return
 
-        //TO DO: Send password to backend later
-
+    try {
+        await resetPassword(password)
         navigate('/login', { replace: true })
+    } catch (err) {
+        // e.g. "Pick a password you haven't used here before."
+        setFormError(err.message)
     }
-
+}
     return (
         <main className="mx-auto flex min-h-screen w-full max-w-[27.5rem] flex-col bg-background px-5 py-10 text-ink">
         {/* Logo */}
@@ -77,6 +85,11 @@ export default function ChangePassword() {
             autoComplete="new-password"
             />
 
+            {formError && (
+            <p role="alert" className="text-sm text-red-600">
+             {formError}
+            </p>
+            )}
             <Button type="submit" className="mt-4 w-full">
             Update password
             </Button>

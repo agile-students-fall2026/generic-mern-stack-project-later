@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import TextField from '../components/TextField'
 import Button from '../components/Button'
+import { login } from '../api/auth'
 
 function validateUsernameOrEmail(value) {
   if (!value.trim()) return 'Enter your username or email.'
@@ -10,7 +11,7 @@ function validateUsernameOrEmail(value) {
 }
 
 function validatePassword(value) {
-  if (!value) return 'Enqter your password.'
+  if (!value) return 'Enter your password.'
   return ''
 }
 
@@ -18,6 +19,8 @@ export default function Login() {
   const navigate = useNavigate()
   const [usernameOrEmail, setUsernameOrEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [formError, setFormError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const [touched, setTouched] = useState({
     usernameOrEmail: false,
     password: false,
@@ -31,8 +34,9 @@ export default function Login() {
     ? validatePassword(password)
     : ''
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
+    setFormError('')
 
     setTouched({
       usernameOrEmail: true,
@@ -46,10 +50,16 @@ export default function Login() {
       return
     }
 
-    // TODO: replace with a real backend login call.
-    navigate('/', { replace: true })
-    
-    
+    setSubmitting(true)
+    try {
+      await login(usernameOrEmail.trim(), password)
+      navigate('/', { replace: true })
+    } catch (err) {
+      // e.g. "Wrong email or password."
+      setFormError(err.message)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -95,6 +105,13 @@ export default function Login() {
           error={passwordError}
           autoComplete="current-password"
         />
+        
+        {formError && (
+            <p role="alert" className="text-sm text-red-600">
+            {formError}
+            </p>
+        )}
+
 
         {/* Forgot password */}
         <div className="-mt-3 flex justify-end">
