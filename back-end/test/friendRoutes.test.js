@@ -36,6 +36,15 @@ describe("Friend routes", () => {
         expect(res.body.recentlySaved.map(({ savedPlaceId }) => savedPlaceId)).to.deep.equal(["sp_6", "sp_7"]);
     });
 
+    it("only includes places from lists the current user belongs to", async () => {
+        const res = await get("/api/friends/most-saved");
+        const myCityNames = lists
+            .filter((list) => list.memberIds.includes(currentUserId))
+            .map((list) => cities.find((city) => city.id === list.cityId).name);
+        expect(res.status).to.equal(200);
+        for (const place of res.body) expect(myCityNames).to.include(place.cityName);
+    });
+
     for (const id of ["u_3", "u_1", "nope"]) {
         it(`returns 404 for a non-friend, yourself, or a missing user (${id})`, async () => {
             const res = await get(`/api/friends/${id}`);
