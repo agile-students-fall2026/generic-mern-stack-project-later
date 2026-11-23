@@ -1,90 +1,103 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import DuplicateWarning from '../components/DuplicateWarning'
 import PlaceConfirmCard from '../components/PlaceConfirmCard'
-import {
-  getAmbiguousCandidates,
-  getDuplicateSavedPlace,
-  getLookupCityId,
-  getPlaceById,
-  searchPlacesInCity,
-} from '../data/mockDataLayer'
-import './SuggestedMatches.css'
 import BackLink from '../components/BackLink'
+import { useApi } from '../hooks/useApi'
+import { getPlaceCard, searchPlaces } from '../api/createFlow'
 
 /**
  * Did you mean?
- * From Create: navigate('/create/matches', { state: { lookup } }) when status is "ambiguous"
+ * From Create, when lookup.status is "ambiguous":
+ *   { state: { lookup, candidates, cityId } }
+ * candidates and cityId are the extra fields on POST /api/links/lookup.
+ * From Place Found ("Not it"): the same state, with this place's cityId.
  */
 export default function SuggestedMatches() {
   const location = useLocation()
   const navigate = useNavigate()
   const lookup = location.state?.lookup
-  const cityId = location.state?.cityId ?? getLookupCityId(lookup)
+  const cityId = location.state?.cityId
+  // Already shaped for the cards: { placeId, name, subtitle, photoUrl, bestMatch }
+  const candidates = location.state?.candidates
 
   const [searchText, setSearchText] = useState('')
+  const [selectedPlaceId, setSelectedPlaceId] = useState(null)
 
   const keywords = lookup?.keywords ?? []
 
-  const candidates = useMemo(() => getAmbiguousCandidates(lookup), [lookup])
-
-  const [selectedPlaceId, setSelectedPlaceId] = useState(null)
-
+  // Pre-select Best Match when the candidate list arrives
   useEffect(() => {
-    const best = candidates.find((row) => row.bestMatch)
-    setSelectedPlaceId(best?.placeId ?? candidates[0]?.placeId ?? null)
-  }, [lookup, candidates])
+    const rows = candidates ?? []
+    const best = rows.find((row) => row.bestMatch)
+    setSelectedPlaceId(best?.placeId ?? rows[0]?.placeId ?? null)
+  }, [candidates])
 
-  const searchResults = useMemo(() => {
-    if (!cityId) return []
-    return searchPlacesInCity(cityId, searchText)
-  }, [cityId, searchText])
+  // Empty box: do not search. The candidate list stays on screen.
+  const search = useApi(
+    (options) => {
+      if (!cityId || !searchText.trim()) return Promise.resolve(null)
+      return searchPlaces(cityId, searchText, options)
+    },
+    [cityId, searchText],
+  )
 
-  const duplicate = useMemo(() => {
-    if (!selectedPlaceId) return null
-    return getDuplicateSavedPlace(selectedPlaceId)
-  }, [selectedPlaceId])
-
-  const selectedPlace = selectedPlaceId ? getPlaceById(selectedPlaceId) : null
+  // The card call is how we know whether the selected place is already saved.
+  const selectedCard = useApi(
+    (options) => {
+      if (!selectedPlaceId) return Promise.resolve(null)
+      return getPlaceCard(selectedPlaceId, lookup?.id, options)
+    },
+    [selectedPlaceId, lookup?.id],
+  )
 
   if (!lookup || !cityId) {
     return (
-      <section className="flow-page">
+      <section className="p-4 pb-20">
         <p>Start by pasting a link on the Create screen.</p>
         <Link to="/create">Go to Create</Link>
       </section>
     )
   }
 
-  // update selection on click
   function choosePlace(placeId) {
     setSelectedPlaceId(placeId)
   }
 
   function confirmChoice() {
-    if (!selectedPlaceId || duplicate) return
+    if (!selectedPlaceId || selectedCard.data?.duplicate) return
     navigate('/create/identifying', {
-      state: { lookup, placeId: selectedPlaceId },
+      state: {
+        lookup,
+        placeId: selectedPlaceId,
+        candidates: candidates ?? [],
+        cityId,
+      },
     })
   }
 
-  // Show search results when typing; otherwise show link candidates
-  const listToShow = searchText.trim() ? searchResults : candidates
+  const searching = Boolean(searchText.trim()) && search.loading
+  // While searching, keep the previous results instead of flashing "No matches".
+  const listToShow = searchText.trim() ? (search.data ?? []) : (candidates ?? [])
+
+  const selectedName = selectedCard.data?.name
+    ?? listToShow.find((row) => row.placeId === selectedPlaceId)?.name
+    ?? (candidates ?? []).find((row) => row.placeId === selectedPlaceId)?.name
 
   return (
-    <section className="flow-page">
+    <section className="p-4 pb-20">
       <BackLink to="/create" className="mb-6" />
 
-      <h1 className="flow-title">Close. Which one is it?</h1>
+      <h1 className="mb-4 text-2xl font-bold">Close. Which one is it?</h1>
 
       {keywords.length > 0 && (
         <>
-          <p className="flow-keywords-intro">
+          <p className="mb-3 text-sm leading-[1.4] text-muted">
             We couldn&apos;t pin down one place, but here&apos;s what the post mentioned:
           </p>
-          <ul className="flow-keywords" aria-label="Words from the post">
+          <ul className="mb-4 flex flex-wrap gap-2" aria-label="Words from the post">
             {keywords.map((word) => (
-              <li key={word} className="flow-keyword">
+              <li key={word} className="rounded-input bg-subtle px-2.5 py-1.5 text-sm">
                 &quot;{word}&quot;
               </li>
             ))}
@@ -92,16 +105,25 @@ export default function SuggestedMatches() {
         </>
       )}
 
-      <div className="flow-candidate-list">
-        {listToShow.length === 0 ? (
-          <p className="flow-empty">No matches. Try another search.</p>
+      <div className="mb-4 flex flex-col gap-2">
+        {searchText.trim() && search.error ? (
+          <p className="text-sm text-error" role="alert">
+            {search.error.message}{' '}
+            <button type="button" onClick={search.retry}>Try again</button>
+          </p>
+        ) : searching ? (
+          <p className="text-sm text-muted">Searching…</p>
+        ) : listToShow.length === 0 ? (
+          <p className="text-sm text-muted">No matches. Try another search.</p>
         ) : (
           listToShow.map((row) => (
             <PlaceConfirmCard
               key={row.placeId}
               thumbnailUrl={row.photoUrl}
               name={row.name}
-              subtitle={row.subtitle}
+              subtitle={row.neighborhood}
+              categoryId={row.categoryId}
+              categoryLabel={row.categoryLabel}
               bestMatch={row.bestMatch}
               isSelected={row.placeId === selectedPlaceId}
               selectable
@@ -111,30 +133,34 @@ export default function SuggestedMatches() {
         )}
       </div>
 
-      {/* <label className="flow-search-label" htmlFor="place-search">
-        None of these, search instead
-      </label> */}
       <input
         id="place-search"
-        className="input-field flow-search-input"
+        className="input-field mb-4"
         type="search"
         value={searchText}
         onChange={(event) => setSearchText(event.target.value)}
         placeholder="None of these, search instead"
       />
 
-      {selectedPlace && (
-        <div className="flow-selected">
+      {selectedName && (
+        <div className="border-t border-border pt-4">
           <p>
-            Selected: <strong>{selectedPlace.name}</strong>
+            Selected: <strong>{selectedName}</strong>
           </p>
-          {duplicate && (
-            <DuplicateWarning placeName={selectedPlace.name} placeId={selectedPlaceId} />
+          {selectedCard.data?.duplicate && (
+            <DuplicateWarning placeName={selectedName} placeId={selectedPlaceId} />
+          )}
+          {selectedCard.error && (
+            <p className="text-sm text-error" role="alert">
+              {selectedCard.error.message}{' '}
+              <button type="button" onClick={selectedCard.retry}>Try again</button>
+            </p>
           )}
           <button
             type="button"
-            className="flow-primary"
-            disabled={Boolean(duplicate)}
+            className="btn-primary hover:btn-primary-hover mb-3 w-full"
+            // Wait until the duplicate check comes back, so we don't save twice
+            disabled={Boolean(selectedCard.data?.duplicate) || selectedCard.loading}
             onClick={confirmChoice}
           >
             Use this place
