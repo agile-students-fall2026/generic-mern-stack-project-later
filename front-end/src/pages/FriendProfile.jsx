@@ -176,8 +176,8 @@ export default function FriendProfile() {
                   const invited = list.alreadyInvited || invitedListIds.has(list.listId)
                   return (
                     <li key={list.listId}>
-                      <button
-                        type="button"
+                      <Button
+                        variant="secondary"
                         onClick={() => invite(list)}
                         aria-label={`Invite ${name} to ${list.cityName}`}
                         disabled={invited || sending}
@@ -185,7 +185,7 @@ export default function FriendProfile() {
                       >
                         <span className="font-semibold">{list.cityName}</span>
                         <span className="text-sm text-muted">{invited ? 'Invite sent' : 'Invite'}</span>
-                      </button>
+                      </Button>
                     </li>
                   )
                 })}

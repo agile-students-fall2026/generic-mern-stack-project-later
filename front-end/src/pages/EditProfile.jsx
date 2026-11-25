@@ -5,6 +5,8 @@ import TextField from '../components/TextField'
 import { getMyProfile, updateMyProfile } from '../api/users'
 import { useApi } from '../hooks/useApi'
 import BackLink from '../components/BackLink'
+import Button from '../components/Button'
+
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024
 
@@ -46,9 +48,9 @@ export default function EditProfile() {
         <p role="alert" className="mt-2 text-sm text-muted">
           {error?.message || 'Your profile is unavailable.'}
         </p>
-        <button type="button" onClick={retry} className="btn-secondary mt-4">
+        <Button variant="secondary" className="mt-4" onClick={retry}>
           Try again
-        </button>
+        </Button>
       </section>
     )
   }
@@ -161,13 +163,13 @@ function EditProfileForm({ profile }) {
           </p>
         )}
 
-        <button
+        <Button
           type="submit"
           disabled={saving}
-          className="mt-2 min-h-11 btn-primary hover:btn-primary-hover focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-brand"
+          className="mt-2"
         >
           {saving ? 'Saving…' : 'Save changes'}
-        </button>
+        </Button>
       </form>
     </section>
   )

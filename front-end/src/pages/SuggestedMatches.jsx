@@ -5,6 +5,8 @@ import PlaceConfirmCard from '../components/PlaceConfirmCard'
 import BackLink from '../components/BackLink'
 import { useApi } from '../hooks/useApi'
 import { getPlaceCard, searchPlaces } from '../api/createFlow'
+import Button from '../components/Button'
+
 
 /**
  * Did you mean?
@@ -105,7 +107,7 @@ export default function SuggestedMatches() {
         {searchText.trim() && search.error ? (
           <p className="text-sm text-error" role="alert">
             {search.error.message}{' '}
-            <button type="button" onClick={search.retry}>Try again</button>
+            <Button variant="link" onClick={search.retry}>Try again</Button>
           </p>
         ) : searching ? (
           <p className="text-sm text-muted">Searching…</p>
@@ -157,18 +159,17 @@ export default function SuggestedMatches() {
           {selectedCard.error && (
             <p className="text-sm text-error" role="alert">
               {selectedCard.error.message}{' '}
-              <button type="button" onClick={selectedCard.retry}>Try again</button>
+              <Button variant="link" onClick={selectedCard.retry}>Try again</Button>
             </p>
           )}
-          <button
-            type="button"
-            className="btn-primary hover:btn-primary-hover mb-3 w-full"
+          <Button
+            className="mb-3 w-full"
             // Wait until the duplicate check comes back, so we don't save twice
             disabled={!selectedCard.data || Boolean(selectedCard.data.duplicate) || Boolean(selectedCard.error) || selectedCard.loading}
             onClick={confirmChoice}
-          >
+            >
             Use this place
-          </button>
+          </Button>
         </div>
       )}
     </section>

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router'
 import Avatar from '../components/Avatar'
 import { getMyProfile } from '../api/users'
 import { useApi } from '../hooks/useApi'
-
+import Button from '../components/Button'
 import { logout } from '../api/auth'
 
 // The three little tags under "Your vibe" take turns using these colors
@@ -26,9 +26,9 @@ export default function Profile() {
         <p role="alert" className="mt-2 text-sm text-muted">
           {error?.message || 'Your profile is unavailable.'}
         </p>
-        <button type="button" onClick={retry} className="btn-secondary mt-4">
+        <Button variant="secondary" onClick={retry} className="mt-4">
           Try again
-        </button>
+        </Button>
       </section>
     )
   }
@@ -124,13 +124,9 @@ export default function Profile() {
         </li>
       </ul>
 
-      <button
-        type="button"
-        onClick={handleSignOut}
-        className="mt-8 font-semibold text-brand hover:text-brand-dark"
-      >
+      <Button variant="link" onClick={handleSignOut} className="mt-8">
         Log out
-      </button>
+      </Button>
 
     {signOutError && (
       <p role="alert" className="mt-2 text-sm text-red-600">

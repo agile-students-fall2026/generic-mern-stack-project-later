@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import Avatar from '../components/Avatar'
 import { useInvitations } from '../hooks/useInvitations.js'
+import Button from '../components/Button'
+
 
 // "1 place", "2 places"
 function count(number, word) {
@@ -41,9 +43,9 @@ export default function Invites() {
       {error && (
         <p role="alert" className="mt-4 rounded-card bg-peach px-4 py-3 text-sm text-ink">
           {error}{' '}
-          <button type="button" onClick={retry} className="font-semibold underline">
+          <Button variant="link" className="min-h-0 px-0 font-semibold text-ink" onClick={retry}>
             Try again
-          </button>
+          </Button>
         </p>
       )}
 
@@ -68,24 +70,23 @@ export default function Invites() {
               </p>
 
               <div className="mt-4 flex gap-2">
-                <button
-                  type="button"
+                <Button
                   aria-label={`Accept invite to ${invite.cityName}`}
                   disabled={busy}
                   onClick={() => handleAnswer(invite, 'accept')}
-                  className="min-h-11 flex-1 cursor-pointer rounded-button px-5 py-3 font-semibold transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-brand bg-brand text-surface hover:bg-brand-dark"
+                  className="flex-1"
                 >
                   Accept
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="secondary"
                   aria-label={`Decline invite to ${invite.cityName}`}
                   disabled={busy}
                   onClick={() => handleAnswer(invite, 'decline')}
-                  className="min-h-11 flex-1 cursor-pointer rounded-button px-5 py-3 font-semibold transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-brand border border-border bg-surface text-ink"
+                  className="flex-1"
                 >
                   Decline
-                </button>
+                </Button>
               </div>
             </li>
           ))}

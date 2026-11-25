@@ -6,6 +6,8 @@ import BackLink from '../components/BackLink'
 import { castVote, getPlace, getPlaceVotes } from '../api/places'
 import { useApi } from '../hooks/useApi'
 import { LoadingState, ErrorState } from '../components/LoadState'
+import Button from '../components/Button'
+
 
 // Just the first name, so "Samantha Chen" reads as "Samantha"
 function firstName(fullName) {
@@ -130,9 +132,9 @@ export default function PlaceDetail() {
         {votesRequest.error && (
           <p className="mt-8 text-sm text-red-600" role="alert">
             Couldn't load votes.{' '}
-            <button type="button" className="font-semibold underline" onClick={votesRequest.retry}>
+            <Button variant="link" className="min-h-0 px-0 font-semibold" onClick={votesRequest.retry}>
               Try again
-            </button>
+            </Button>
           </p>
         )}
 
