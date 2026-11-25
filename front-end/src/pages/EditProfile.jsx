@@ -20,8 +20,10 @@ function validateUsername(username) {
   if (!username) return 'Choose a username.'
   if (username.length < 3) return 'Use at least 3 characters.'
   if (username.length > 20) return 'Use 20 characters or fewer.'
-  // Letters, numbers, underscores and dots only. No spaces.
-  if (!/^[a-z0-9_.]+$/.test(username)) return 'Use only letters, numbers, dots and underscores.'
+  // Letters, numbers and underscores only. No spaces.
+  if (!/^[a-z0-9_]+$/.test(username)) {
+    return 'Use only letters, numbers and underscores.'
+  }
   return ''
 }
 
@@ -154,7 +156,7 @@ function EditProfileForm({ profile }) {
           onChange={handleUsernameChange}
           onBlur={() => setTouched((current) => ({ ...current, username: true }))}
           error={usernameError}
-          hint="Friends find you with this. 3 to 20 letters, numbers, dots or underscores."
+          hint="Friends find you with this. 3 to 20 letters, numbers or underscores."
         />
 
         {formError && (
