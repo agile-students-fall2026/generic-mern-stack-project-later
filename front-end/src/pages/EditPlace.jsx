@@ -6,6 +6,7 @@ import BackLink from '../components/BackLink'
 import { getConfig } from '../api/config'
 import { useApi } from '../hooks/useApi'
 import { LoadingState, ErrorState } from '../components/LoadState'
+import Button from '../components/Button'
 
 // Each check returns an error message, or '' when the value is fine
 function validateName(name) {
@@ -145,13 +146,13 @@ function EditPlaceForm({ place, categories }) {
           </p>
         )}
 
-        <button
+        <Button
           type="submit"
           disabled={saving}
-          className="mt-2 min-h-11 btn-primary hover:btn-primary-hover focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-brand"
+          className="mt-2"
         >
           {saving ? 'Saving…' : 'Save changes'}
-        </button>
+        </Button>
       </form>
     </section>
   )

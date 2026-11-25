@@ -6,7 +6,7 @@ import BackLink from '../components/BackLink'
 import { LoadingState, ErrorState } from '../components/LoadState'
 import { useApi } from '../hooks/useApi'
 import { getPlaceCard, savePlace } from '../api/createFlow'
-
+import Button from '../components/Button'
 /**
  * Place Found screen.
  * From Create: { state: { lookup, candidates, cityId } }
@@ -116,17 +116,16 @@ export default function Identifying() {
       {saveError && (
         <p className="mb-4 text-sm text-error" role="alert">{saveError}</p>
       )}
-      <button
-        type="button"
-        className="btn-primary hover:btn-primary-hover mb-3 w-full"
-        disabled={Boolean(card.duplicate) || saving}
-        onClick={handleSave}
-      >
-        {saving ? 'Saving…' : `Save to ${card.cityName}`}
-      </button>
-      <button type="button" className="w-full p-2 text-muted underline" onClick={handleNotIt}>
-        Not it? See other matches
-      </button>
+    <Button
+      className="mb-3 w-full"
+      disabled={Boolean(card.duplicate) || saving}
+      onClick={handleSave}
+    >
+      {saving ? 'Saving…' : `Save to ${card.cityName}`}
+    </Button>
+    <Button variant="link" className="w-full text-muted" onClick={handleNotIt}>
+      Not it? See other matches
+    </Button>
     </section>
   )
 }

@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import TextField from '../components/TextField'
 import BackLink from '../components/BackLink'
 import { changeMyPassword } from '../api/users'
+import Button from '../components/Button'
 
 // Same rules as the reset-password page and the server.
 function validatePassword(password) {
@@ -125,13 +126,9 @@ export default function UpdatePassword() {
           </p>
         )}
 
-        <button
-          type="submit"
-          disabled={saving}
-          className="mt-2 min-h-11 btn-primary hover:btn-primary-hover focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-brand"
-        >
+        <Button type="submit" disabled={saving} className="mt-2">
           {saving ? 'Updating…' : 'Update password'}
-        </button>
+        </Button>
       </form>
     </section>
   )

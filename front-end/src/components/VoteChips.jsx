@@ -1,4 +1,5 @@
 import './VoteChips.css'
+import Button from './Button'
 
 const choices = [
   { value: 'must-go', label: 'Must-go' },
@@ -28,7 +29,7 @@ export default function VoteChips({
           const showCount = Number.isSafeInteger(total) && total >= 0
 
           return (
-            <button
+            <Button
               key={choice.value}
               type="button"
               disabled={cannotVote}
@@ -51,7 +52,7 @@ export default function VoteChips({
                 <span className="vote-chips__count">{total}</span>
               )}
               <span className="vote-chips__label">{choice.label}</span>
-            </button>
+            </Button>
           )
         })}
       </div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { lookupLink } from '../api/createFlow'
 import BackLink from '../components/BackLink'
+import Button from '../components/Button'
 
 export default function Create() {
   const navigate = useNavigate()
@@ -98,15 +99,15 @@ export default function Create() {
           />
           {/* Only show clear when there is text in the box */}
           {link.length > 0 && (
-            <button
-              type="button"
-              className="shrink-0 px-2 py-1 text-xl leading-none"
+            <Button
+              variant="link"
+              className="shrink-0 px-2 py-1 text-xl leading-none no-underline"
               aria-label="Clear link"
               onClick={clearLink}
               disabled={finding}
             >
               ×
-            </button>
+            </Button>
           )}
         </div>
         {error && (
@@ -114,9 +115,9 @@ export default function Create() {
             {error}
           </p>
         )}
-        <button type="submit" className="btn-primary hover:btn-primary-hover" disabled={finding}>
+        <Button type="submit" disabled={finding}>
           {finding ? 'Finding…' : 'Find the place'}
-        </button>
+        </Button>
         {manualSearch && (
           <Link to="/create/search" state={manualSearch} className="min-h-11 btn-secondary text-center hover:bg-subtle">
             Search manually

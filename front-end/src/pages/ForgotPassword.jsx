@@ -78,12 +78,13 @@ export default function ForgotPassword() {
             <Link to="/login" className="block min-h-11 w-full text-center btn-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
               Back to log in
             </Link>
-            <button
-              type="button"
+            <Button
+              variant="link"
               onClick={handleUseDifferentEmail}
-              className="self-center border-0 bg-transparent text-sm font-semibold text-brand hover:text-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
+              className="self-center px-0 text-sm font-semibold no-underline hover:text-brand-dark"
+            >
               Use a different email
-            </button>
+            </Button>
           </div>
         </>
       ) : (
